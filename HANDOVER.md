@@ -126,3 +126,6 @@ Each phase ships something playable and has a hard "done" + a test-with-her gate
 ## 11. Immediate next action
 
 **P0 — get it live on GitHub Pages.** Everything else builds on a known-good, already-playable base.
+
+---
+2026-06-10 — v2 BUILT + desktop-verified (gallery/stickers/gate/rename/migration/SW-v2 all proven). Install flow: see INSTALL.md. Awaiting the brief host->install->hide session with Ben + iPad.

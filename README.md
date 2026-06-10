@@ -56,3 +56,6 @@ All characters and art in this project are original and drawn from scratch. It i
 ## License
 
 MIT — see `LICENSE`.
+
+## Version
+v2 — fridge photo gallery, grown-up-gated reset, pet naming, new outfits/hair/wings, bedroom stickers, richer animated rooms, installable-offline (cache dreamhouse-v2).
