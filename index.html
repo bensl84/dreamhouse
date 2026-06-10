@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dream House">
+<meta name="theme-color" content="#f7d6e8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
 <title>Dream House</title>
 <style>
   :root{
@@ -146,6 +150,8 @@
 </style>
 </head>
 <body>
+<div id="offlineBadge" onclick="this.style.display='none'" style="display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:9999; font:700 13px/1 -apple-system,system-ui,sans-serif; padding:7px 14px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.18); cursor:pointer; white-space:nowrap;"></div>
+<div id="verStamp" style="position:fixed; right:7px; bottom:max(5px,env(safe-area-inset-bottom)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v1</div>
 <div id="app">
   <div id="topbar">
     <div id="title"></div>
@@ -929,6 +935,43 @@ function startGame(){
 if(G.name){ nameInput.value=G.name; startGame(); }
 else { nameInput.focus(); }
 window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
+</script>
+<script>
+/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v1) */
+(function(){
+  function badge(){ return document.getElementById('offlineBadge'); }
+  window.showOfflineReady=function(txt){ var b=badge(); if(!b)return; b.textContent=txt;
+    b.style.background='#5fd6b4'; b.style.color='#08311f'; b.style.display='block';
+    clearTimeout(b._t); b._t=setTimeout(function(){ b.style.display='none'; },8000); };
+  function showOfflineFail(txt){ var b=badge(); if(!b)return; b.textContent=txt;
+    b.style.background='#ffd23f'; b.style.color='#5a4500'; b.style.display='block'; }
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', async function(){
+      try { var reg = await navigator.serviceWorker.register('sw.js'); console.log('SW ok', reg.scope); }
+      catch (err) { console.error('SW register FAILED', err);
+        showOfflineFail('Not offline-ready — keep this page open, then reload'); return; }
+      var need = ['./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png',
+                  './icon-512-maskable.png','./apple-touch-icon-180.png'];
+      var checkReady = async function(){
+        try {
+          await navigator.serviceWorker.ready;                 // resolves only once a SW is ACTIVE
+          var c = await caches.open('dreamhouse-v1');
+          var hits = await Promise.all(need.map(function(u){ return c.match(u, { ignoreSearch:true }); }));
+          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v1'); return true; }
+        } catch (e) { console.warn('offline-check', e); }
+        return false;
+      };
+      if (!(await checkReady())) {                              // poll for a slow first install
+        navigator.serviceWorker.addEventListener('controllerchange', checkReady);
+        var n = 0;
+        var t = setInterval(async function(){
+          if (await checkReady() || ++n >= 5) { clearInterval(t);
+            if (n>=5){ var b=badge(); if(b && b.style.display==='none') showOfflineFail('Not offline-ready yet — reload while online'); } }
+        }, 1500);
+      }
+    });
+  }
+})();
 </script>
 </body>
 </html>
