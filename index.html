@@ -317,7 +317,9 @@ function normalizeG(){
   G.bedroom=Object.assign({},DEFAULT.bedroom,G.bedroom);
   if(!Array.isArray(G.garden))G.garden=DEFAULT.garden.slice();
   if(!Array.isArray(G.gallery))G.gallery=[];               /* not in DEFAULT on purpose (no shared ref) */
+  G.gallery=G.gallery.filter(e=>e&&typeof e==='object'&&e.doll);   /* a corrupted entry must never blank the Photos room */
   if(!Array.isArray(G.bedroom.stickers))G.bedroom.stickers=[];
+  if(!/^#[0-9a-fA-F]{3,8}$/.test(G.bedroom.wall||''))G.bedroom.wall=DEFAULT.bedroom.wall;
 }
 normalizeG();
 function save(){ return Store.set('game',G); }
@@ -503,7 +505,7 @@ function accessoriesSVG(a){
 }
 function renderDoll(opt){
   opt=opt||{};
-  const d=opt.doll||G.doll, sleeping=opt.sleeping;  /* opt.doll = gallery re-render override */
+  const d=cleanDoll(opt.doll||G.doll), sleeping=opt.sleeping;  /* opt.doll = gallery override; every render sanitized */
   const sk=d.skin, skD=shade(sk,-22), skL=shade(sk,20), hc=d.hairColor, lip=d.lip;
   const shoes=d.shoes, shD=shade(shoes,-18), shL=shade(shoes,40);
   const sg=uid('s'),hg=uid('h'),og=uid('o'),eg=uid('e'),cg=uid('c');
