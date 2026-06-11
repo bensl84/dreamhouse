@@ -1268,7 +1268,7 @@ function sceneHome(night){
 }
 const HOME_TOYS=[
   {id:'elev', x:302, y:135, w:54, h:345},
-  {id:'bell', x:150, y:394, w:44, h:86},   /* the door IS the doorbell — sized to the inter-window gap, zero window overlap */
+  {id:'bell', x:150, y:394, w:40, h:86},   /* the door IS the doorbell — sized to the inter-window gap */
   {id:'mail', x:238, y:482, w:42, h:58}
 ];
 const HOME_ROOMS=[
@@ -1290,7 +1290,8 @@ function roomHome(){
   let elevFloor=0; const stops=[0,-114,-228];
   r.querySelector('#homeScene').addEventListener('click',ev=>{
     const svg=bg.querySelector('svg'); if(!svg)return;
-    let pt; try{ pt=new DOMPoint(ev.clientX,ev.clientY).matrixTransform(svg.getScreenCTM().inverse()); }catch(e){ return; }
+    let pt; try{ pt=new DOMPoint(ev.clientX,ev.clientY).matrixTransform(svg.getScreenCTM().inverse()); }
+    catch(e){ S.sparkle(); sparkles(ev.clientX,ev.clientY,3); return; }   /* never silent, even on a CTM hiccup */
     const hit=t=>pt.x>=t.x&&pt.x<=t.x+t.w&&pt.y>=t.y&&pt.y<=t.y+t.h;
     const toy=HOME_TOYS.find(hit);
     if(toy){
@@ -1303,7 +1304,8 @@ function roomHome(){
       } else if(toy.id==='bell'){
         tone(784,.18,'sine',.16); setTimeout(()=>tone(523,.22,'sine',.16),190);
         say("Ding dong! Who's there?");
-        setTimeout(()=>{ S[G.pet==='dog'?'woof':'meow'](); const p=bg.querySelector('#yardPet');
+        setTimeout(()=>{ if(!bg.isConnected)return;   /* she may have left the room mid-ding */
+          S[G.pet==='dog'?'woof':'meow'](); const p=bg.querySelector('#yardPet');
           if(p){ const rc=p.getBoundingClientRect(); hearts(rc.left+rc.width/2,rc.top,3); } },900);
       } else if(toy.id==='mail'){
         S.pop(); say('You have mail!'); spriteAt(ev.clientX,ev.clientY,ICON.heart('#ff5fa2'),'floatUp',30);

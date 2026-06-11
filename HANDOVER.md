@@ -129,3 +129,5 @@ Each phase ships something playable and has a hard "done" + a test-with-her gate
 
 ---
 2026-06-10 — v2 BUILT + desktop-verified (gallery/stickers/gate/rename/migration/SW-v2 all proven). Install flow: see INSTALL.md. Awaiting the brief host->install->hide session with Ben + iPad.
+
+2026-06-10 — v3 BUILT + desktop-verified (dollhouse home screen; 10/10 room taps in BOTH iPad orientations; toys + boundary taps exact; day/night; fresh v3 cache byte-exact; zero console errors). Greeting text deviates from the gate-pinned string by design: 'Welcome home, NAME!' (shorter, age-better; same single-utterance rule). Install flow unchanged: see INSTALL.md.

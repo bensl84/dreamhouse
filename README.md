@@ -58,4 +58,5 @@ All characters and art in this project are original and drawn from scratch. It i
 MIT — see `LICENSE`.
 
 ## Version
-v2 — fridge photo gallery, grown-up-gated reset, pet naming, new outfits/hair/wings, bedroom stickers, richer animated rooms, installable-offline (cache dreamhouse-v2).
+v3 — THE DOLLHOUSE: mansion cross-section home screen (tap rooms to enter; elevator, doorbell, mailbox; day/night follows the bedroom; her pet in the yard), installable-offline (cache dreamhouse-v3).
+v2 — fridge photo gallery, grown-up-gated reset, pet naming, new outfits/hair/wings, bedroom stickers, richer animated rooms.
