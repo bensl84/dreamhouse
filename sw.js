@@ -1,7 +1,7 @@
-/* Dream House service worker — version: dreamhouse-v3
+/* Dream House service worker — version: dreamhouse-v3.1
    Makes the game installable + offline. Bump CACHE on every content change (and the
    version stamp + badge text in index.html + README) — the pre-publish check greps for a match. */
-const CACHE = 'dreamhouse-v3';
+const CACHE = 'dreamhouse-v3.1';
 // No bare './' here: iOS Safari's strict Cache API + GitHub Pages directory-URL normalization can make
 // './' fail to match; the navigation fallback below already serves index.html for the bare URL.
 const ASSETS = [
