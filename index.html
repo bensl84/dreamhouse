@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dream House">
+<meta name="robots" content="noindex,noarchive">
+<meta name="theme-color" content="#f7d6e8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
+<title>Dream House</title>
+<style>
+  :root{
+    --pink:#ff5fa2; --pink-deep:#e63d86; --yellow:#ffd23f; --mint:#5fd6b4;
+    --lav:#b79cff; --sky1:#ffe3f1; --sky2:#dcefff; --cream:#fff8f0;
+    --ink:#5a3d52; --soft:#ffffffd9; --shadow:rgba(120,60,100,.22);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;user-select:none;touch-action:manipulation;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    font-family:'ui-rounded','SF Pro Rounded','Hiragino Maru Gothic ProN','Comic Sans MS','Chalkboard SE',sans-serif;
+    background:linear-gradient(160deg,var(--sky1),var(--sky2));
+    color:var(--ink); position:fixed; inset:0;
+  }
+  #app{position:absolute; inset:0; display:flex; flex-direction:column;}
+  /* ---------- TOP BAR ---------- */
+  #topbar{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+    padding:max(10px,env(safe-area-inset-top)) 16px 8px; gap:10px; z-index:30;
+  }
+  #title{font-size:clamp(18px,4.5vw,26px); font-weight:800; color:var(--pink-deep);
+    text-shadow:0 2px 0 #fff; letter-spacing:.5px; display:flex; align-items:center; gap:8px;}
+  #title svg{width:30px;height:30px;filter:drop-shadow(0 2px 3px var(--shadow));}
+  .iconbtn{
+    width:50px; height:50px; border:none; border-radius:50%;
+    background:linear-gradient(#ffffff,#ffe9f3);
+    box-shadow:0 5px 12px var(--shadow), inset 0 2px 2px #fff, inset 0 -3px 4px rgba(180,90,140,.18);
+    font-size:24px; display:grid; place-items:center; cursor:pointer; transition:transform .12s ease;
+  }
+  .iconbtn:active{transform:scale(.88);}
+  /* ---------- STAGE ---------- */
+  #stage{flex:1 1 auto; position:relative; overflow:hidden; min-height:0;}
+  .room{position:absolute; inset:0; display:flex; flex-direction:column;
+    opacity:0; transform:scale(.97) translateY(8px); pointer-events:none; transition:opacity .3s ease, transform .3s cubic-bezier(.2,.9,.3,1.2);}
+  .room.active{opacity:1; transform:none; pointer-events:auto;}
+  /* ---------- BOTTOM NAV ---------- */
+  #nav{
+    flex:0 0 auto; display:flex; gap:6px; padding:8px 8px max(8px,env(safe-area-inset-bottom));
+    overflow-x:auto; background:var(--soft); box-shadow:0 -4px 16px var(--shadow);
+    backdrop-filter:blur(8px); scrollbar-width:none;
+  }
+  #nav::-webkit-scrollbar{display:none;}
+  .navbtn{
+    flex:0 0 auto; width:60px; height:64px; border:none; border-radius:18px; background:transparent;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    cursor:pointer; transition:transform .12s ease, background .2s; font-size:11px; font-weight:700;
+    color:var(--ink);
+  }
+  .navbtn .e{width:30px;height:30px;display:block;}
+  .navbtn .e svg{width:100%;height:100%;}
+  .navbtn:active{transform:scale(.9);}
+  .navbtn.on{background:#fff; box-shadow:0 4px 10px var(--shadow);}
+  .navbtn.on .e{filter:drop-shadow(0 2px 3px var(--shadow));}
+  /* ---------- GENERIC ROOM LAYOUT ---------- */
+  .scene{flex:1 1 auto; position:relative; overflow:hidden; min-height:0;}
+  .sceneBg{position:absolute;inset:0;width:100%;height:100%;}
+  .sceneBg svg{position:absolute;inset:0;width:100%;height:100%;}
+  .roomname{position:absolute; top:8px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(#fff,#fff0f7); padding:6px 20px; border-radius:30px; font-weight:800; font-size:16px;
+    color:var(--pink-deep); box-shadow:0 6px 14px var(--shadow), inset 0 2px 2px #fff; z-index:5; white-space:nowrap;}
+  .tray{flex:0 0 auto; background:linear-gradient(var(--cream),#fff3e6); padding:10px; display:flex; flex-direction:column;
+    gap:8px; box-shadow:0 -4px 16px var(--shadow); max-height:42%; overflow-y:auto;}
+  .tabrow{display:flex; gap:6px; overflow-x:auto; scrollbar-width:none;}
+  .tabrow::-webkit-scrollbar{display:none;}
+  .tab{flex:0 0 auto; padding:8px 14px; border:none; border-radius:16px; background:linear-gradient(#fff,#fdeef5);
+    font-weight:700; font-size:14px; color:var(--ink); box-shadow:0 3px 7px var(--shadow), inset 0 1px 1px #fff;
+    cursor:pointer; transition:transform .1s;}
+  .tab.on{background:linear-gradient(#ff7db5,#ff4f97); color:#fff; box-shadow:0 4px 9px rgba(230,61,134,.4), inset 0 1px 1px #ffb8d8;}
+  .tab:active{transform:scale(.92);}
+  .swatches{display:flex; flex-wrap:wrap; gap:10px; padding-top:2px; align-content:flex-start;}
+  .sw{width:54px; height:54px; border-radius:16px; border:3px solid #fff; cursor:pointer;
+    box-shadow:0 4px 9px var(--shadow), inset 0 2px 3px rgba(255,255,255,.5); display:grid; place-items:center; font-size:26px;
+    transition:transform .1s; flex:0 0 auto; background:#fff; overflow:hidden;}
+  .sw svg{width:34px;height:34px;}
+  .sw:active{transform:scale(.88);}
+  .sw.sel{outline:4px solid var(--yellow); outline-offset:1px; transform:scale(1.06);}
+  .bigbtn{border:none; border-radius:22px; padding:14px 22px; font-weight:800; font-size:17px;
+    color:#fff; background:linear-gradient(#ff7db5,#ff4f97);
+    box-shadow:0 6px 0 var(--pink-deep),0 10px 16px var(--shadow), inset 0 2px 2px #ffc2dd;
+    cursor:pointer; transition:transform .1s,box-shadow .1s;}
+  .bigbtn:active{transform:translateY(5px); box-shadow:0 1px 0 var(--pink-deep),0 3px 8px var(--shadow), inset 0 2px 2px #ffc2dd;}
+  .bigbtn.alt{background:linear-gradient(#7fe6ca,#48c9a6); box-shadow:0 6px 0 #38b393,0 10px 16px var(--shadow), inset 0 2px 2px #c2f5e8;}
+  .bigbtn.alt:active{box-shadow:0 1px 0 #38b393,0 3px 8px var(--shadow), inset 0 2px 2px #c2f5e8;}
+  .bigbtn.sun{background:linear-gradient(#ffe07a,#ffcc1f); color:var(--ink); box-shadow:0 6px 0 #d9a800,0 10px 16px var(--shadow), inset 0 2px 2px #fff0bd;}
+  .bigbtn.sun:active{box-shadow:0 1px 0 #d9a800,0 3px 8px var(--shadow), inset 0 2px 2px #fff0bd;}
+  .btnrow{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+  .stagecanvas{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  svg{display:block; max-width:100%; max-height:100%;}
+  .idle{animation:idleFloat 3.4s ease-in-out infinite;}
+  /* meter */
+  .meter{position:absolute; top:12px; right:12px; background:linear-gradient(#fff,#fff0f7); padding:8px 12px; border-radius:20px;
+    box-shadow:0 5px 12px var(--shadow), inset 0 1px 1px #fff; font-weight:800; font-size:14px; display:flex; align-items:center; gap:8px; z-index:6;}
+  .meter svg{width:20px;height:20px;}
+  .meterbar{width:90px; height:14px; background:#ffe0ec; border-radius:8px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(150,80,120,.3);}
+  .meterfill{height:100%; width:50%; background:linear-gradient(90deg,var(--pink),var(--yellow)); transition:width .5s ease; box-shadow:inset 0 1px 1px rgba(255,255,255,.6);}
+  /* ---------- START SCREEN ---------- */
+  #start{position:absolute; inset:0; z-index:50; background:linear-gradient(160deg,#ffd9ec,#cdeaff);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; padding:24px; text-align:center; overflow:hidden;}
+  #startScene{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.9;}
+  #start>*{position:relative;z-index:1;}
+  #start h1{font-size:clamp(30px,9vw,52px); color:var(--pink-deep); text-shadow:0 3px 0 #fff,0 6px 10px var(--shadow); line-height:1.05;}
+  #start p{font-size:18px; font-weight:700; color:var(--ink);}
+  #nameInput{font-family:inherit; font-size:24px; font-weight:800; text-align:center; padding:14px 18px;
+    border:4px solid var(--pink); border-radius:20px; background:#fff; color:var(--pink-deep); width:min(80vw,340px);
+    box-shadow:0 8px 18px var(--shadow); -webkit-user-select:text; user-select:text;}
+  #nameInput:focus{outline:none; border-color:var(--yellow);}
+  .petpick{display:flex; gap:18px;}
+  .petcard{width:120px; height:134px; border-radius:24px; background:linear-gradient(#fff,#fff2f8); border:5px solid #fff;
+    box-shadow:0 8px 20px var(--shadow), inset 0 2px 3px #fff; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:4px; cursor:pointer; transition:transform .12s; font-weight:800;}
+  .petcard svg{width:74px;height:74px;}
+  .petcard span{font-size:18px; color:var(--ink);}
+  .petcard.sel{outline:5px solid var(--yellow); transform:scale(1.06);}
+  .petcard:active{transform:scale(.94);}
+  /* ---------- FLOATING FX ---------- */
+  .fx{position:fixed; pointer-events:none; z-index:60; will-change:transform,opacity;}
+  .fx svg{width:100%;height:100%;}
+  @keyframes floatUp{0%{transform:translateY(0) scale(.4); opacity:0;}
+    20%{opacity:1; transform:translateY(-10px) scale(1.1);}
+    100%{transform:translateY(-170px) scale(.8); opacity:0;}}
+  @keyframes pop{0%{transform:scale(0) rotate(0);}60%{transform:scale(1.3) rotate(20deg);}100%{transform:scale(0) rotate(40deg); opacity:0;}}
+  @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0); opacity:1;}
+    100%{transform:translateY(110vh) rotate(720deg); opacity:.9;}}
+  @keyframes bounceIn{0%{transform:scale(0);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+  @keyframes wiggle{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+  .wiggle{animation:wiggle .6s ease-in-out infinite;}
+  @keyframes idleFloat{0%,100%{transform:translateY(0) rotate(-.6deg);}50%{transform:translateY(-10px) rotate(.6deg);}}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes sway{0%,100%{transform:translateX(-3px) rotate(-2deg);}50%{transform:translateX(3px) rotate(2deg);}}
+  .toast{position:fixed; left:50%; top:42%; transform:translate(-50%,-50%) scale(0); z-index:70;
+    background:linear-gradient(#fff,#fff0f7); color:var(--pink-deep); font-weight:900; font-size:clamp(34px,10vw,64px);
+    padding:18px 36px; border-radius:40px; box-shadow:0 14px 34px var(--shadow), inset 0 2px 3px #fff; pointer-events:none;
+    text-shadow:0 2px 0 #ffe3f1;}
+  @keyframes toastPop{0%{transform:translate(-50%,-50%) scale(0) rotate(-8deg);}
+    50%{transform:translate(-50%,-50%) scale(1.15) rotate(4deg);}
+    80%{transform:translate(-50%,-50%) scale(1) rotate(0);}
+    100%{transform:translate(-50%,-50%) scale(0) rotate(0); opacity:0;}}
+  /* ---------- V2: ambient motion + gate + gallery + stickers + props ---------- */
+  @keyframes drift{0%,100%{transform:translateX(-14px);}50%{transform:translateX(14px);}}
+  .drift{animation:drift 26s ease-in-out infinite;}
+  .drift2{animation:drift 34s ease-in-out infinite reverse;}
+  @keyframes twk{0%,100%{opacity:.25;}50%{opacity:1;}}
+  .tw{animation:twk 2.6s ease-in-out infinite;}
+  .tw2{animation:twk 3.8s ease-in-out infinite .9s;}
+  @keyframes steamUp{0%{transform:translateY(6px);opacity:0;}30%{opacity:.65;}100%{transform:translateY(-26px);opacity:0;}}
+  .steam{animation:steamUp 4.5s ease-in-out infinite;}
+  .steam2{animation:steamUp 5.6s ease-in-out infinite 1.6s;}
+  @keyframes glowPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+  .glow{animation:glowPulse 2.2s ease-in-out infinite;}
+  .glow2{animation:glowPulse 3.1s ease-in-out infinite 1s;}
+  @keyframes blinkLid{0%,93%,100%{opacity:0;}95%,97%{opacity:1;}}
+  .blinkLid{animation:blinkLid 5.6s ease-in-out infinite;}
+  @keyframes flashFade{0%{opacity:.95;}100%{opacity:0;}}
+  #snapFlash{position:fixed;inset:0;background:#fff;z-index:80;pointer-events:none;display:none;}
+  @keyframes pulse3{0%,100%{transform:scale(1);}50%{transform:scale(1.22);}}
+  @keyframes discoFlash{0%,100%{filter:none;}25%{filter:brightness(1.5) hue-rotate(40deg);}60%{filter:brightness(1.3) hue-rotate(-40deg);}}
+  @keyframes glowOnce{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .glowOnce{animation:glowOnce .6s ease 3;}
+  .homeBtn{border:none;background:transparent;padding:4px;min-width:44px;min-height:44px;display:grid;place-items:center;cursor:pointer;transition:transform .12s;}
+  .homeBtn svg{width:30px;height:30px;filter:drop-shadow(0 2px 3px var(--shadow));}
+  .homeBtn:active{transform:scale(.88);}
+  .pulse3{animation:pulse3 .55s ease-in-out 3;}
+  #snapBtn{position:absolute;right:14px;bottom:14px;z-index:6;width:64px;height:64px;border:none;border-radius:50%;
+    background:linear-gradient(#fff,#ffe9f3);box-shadow:0 6px 14px var(--shadow),inset 0 2px 2px #fff;font-size:30px;
+    display:grid;place-items:center;cursor:pointer;transition:transform .12s;}
+  #snapBtn:active{transform:scale(.88);}
+  #snapBtn.off{opacity:.55;}
+  .prop{position:absolute;z-index:4;cursor:pointer;transition:transform .12s;}
+  .prop svg{width:100%;height:100%;}
+  .prop:active{transform:scale(.9);}
+  .polagrid{position:absolute;inset:0;z-index:4;display:flex;flex-wrap:wrap;gap:14px;align-content:flex-start;
+    justify-content:center;padding:60px 14px 16px;overflow-y:auto;}
+  .polaroid{background:#fff;padding:7px 7px 18px;border-radius:6px;box-shadow:0 6px 14px var(--shadow);
+    transform:rotate(-2deg);cursor:pointer;transition:transform .12s;}
+  .polaroid:nth-child(2n){transform:rotate(2deg);}
+  .polaroid:active{transform:scale(.92);}
+  .polaroid svg{pointer-events:none;}
+  .ovl{position:fixed;inset:0;z-index:90;background:rgba(90,61,82,.45);display:none;align-items:center;justify-content:center;padding:20px;}
+  .ovl.on{display:flex;}
+  .card{background:linear-gradient(#fff,#fff3f9);border-radius:28px;padding:22px;box-shadow:0 18px 44px rgba(60,20,45,.45);
+    display:flex;flex-direction:column;align-items:center;gap:14px;max-width:min(92vw,440px);max-height:86vh;overflow-y:auto;text-align:center;}
+  .card h2{color:var(--pink-deep);font-size:22px;}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+  .chip{border:none;border-radius:18px;padding:12px 18px;font-weight:800;font-size:17px;background:linear-gradient(#fff,#fdeef5);
+    color:var(--ink);box-shadow:0 4px 9px var(--shadow);cursor:pointer;transition:transform .1s;}
+  .chip:active{transform:scale(.92);}
+  .chip.sel{outline:4px solid var(--yellow);}
+  .chip.plain{font-size:14px;font-weight:700;background:#f3e8ee;box-shadow:none;color:#8a6a7e;}
+  #holdStar{width:110px;height:110px;border:none;border-radius:50%;background:linear-gradient(#ffe07a,#ffcc1f);
+    box-shadow:0 8px 0 #d9a800,0 12px 20px var(--shadow);font-size:50px;cursor:pointer;touch-action:none;
+    -webkit-touch-callout:none;position:relative;overflow:hidden;display:grid;place-items:center;}
+  #holdFill{position:absolute;left:0;bottom:0;width:100%;height:0%;background:rgba(255,255,255,.65);pointer-events:none;transition:height .12s linear;}
+  #gateHit{position:fixed;right:2px;top:max(66px,calc(env(safe-area-inset-top) + 62px));width:28px;height:28px;z-index:9997;background:transparent;border:none;padding:0;}
+  @media (prefers-reduced-motion: reduce){
+    .drift,.drift2,.tw,.tw2,.steam,.steam2,.glow,.glow2,.blinkLid,.idle{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div id="offlineBadge" onclick="this.style.display='none'" style="display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:9999; font:700 13px/1 -apple-system,system-ui,sans-serif; padding:7px 14px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.18); cursor:pointer; white-space:nowrap;"></div>
+<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v3</div>
+<button id="gateHit" aria-hidden="true" tabindex="-1"></button>
+<div id="snapFlash"></div>
+<div id="gateOverlay" class="ovl"><div class="card" id="gateCard">
+  <h2>Grown-ups only! 🔒</h2>
+  <p style="font-weight:700;">Hold the star for 3 seconds.</p>
+  <button id="holdStar">⭐<div id="holdFill"></div></button>
+  <div id="gateConfirm" style="display:none;flex-direction:column;gap:10px;align-items:center;">
+    <p style="font-weight:800;">Erase everything and start over?</p>
+    <button class="chip plain" id="gateYes">YES, erase</button>
+  </div>
+  <button class="bigbtn alt" id="gateBack">Go back to playing 🎀</button>
+</div></div>
+<div id="bigView" class="ovl"><div class="card" id="bigViewCard"></div></div>
+<div id="nameOvl" class="ovl"><div class="card" id="nameCard"></div></div>
+<div id="app">
+  <div id="topbar">
+    <div id="title"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="iconbtn" id="muteBtn" aria-label="sound">🔊</button>
+    </div>
+  </div>
+  <div id="stage"></div>
+  <div id="nav"></div>
+</div>
+<!-- START SCREEN -->
+<div id="start">
+  <div id="startScene"></div>
+  <h1>✨ Dream House ✨</h1>
+  <p>What's your name?</p>
+  <input id="nameInput" maxlength="14" placeholder="Type here" autocomplete="off" autocorrect="off">
+  <p>Pick your best friend!</p>
+  <div class="petpick">
+    <div class="petcard" data-pet="dog"><span>Puppy</span></div>
+    <div class="petcard" data-pet="cat"><span>Kitty</span></div>
+  </div>
+  <button class="bigbtn" id="playBtn" style="margin-top:6px;font-size:22px;padding:16px 40px;">Let's Play! 🎀</button>
+</div>
+<script>
+"use strict";
+/* =========================================================================
+   SAFE STORAGE
+   ========================================================================= */
+const mem = {};
+const Store = {
+  get(k, d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return (k in mem)?mem[k]:d; } },
+  /* returns TRUE only on a real durable write — the in-memory fallback keeps the session
+     playable but must never report a fake success for saved game state */
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ mem[k]=v; return false; } }
+};
+/* =========================================================================
+   SOUND (Web Audio, fully offline)
+   ========================================================================= */
+let AC=null, muted=Store.get('muted',false);
+function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(freq,dur,type='sine',vol=.18){
+  if(muted)return; const a=ac(); if(!a)return;
+  const o=a.createOscillator(), g=a.createGain();
+  o.type=type; o.frequency.value=freq; o.connect(g); g.connect(a.destination);
+  const t=a.currentTime; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.start(t); o.stop(t+dur);
+}
+const S={
+  pop(){ tone(540+Math.random()*120,.12,'triangle',.16); },
+  tap(){ tone(720,.08,'sine',.12); },
+  sparkle(){ [880,1180,1480].forEach((f,i)=>setTimeout(()=>tone(f,.16,'sine',.12),i*60)); },
+  happy(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.16),i*90)); },
+  yum(){ [659,784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,.22,'sine',.18),i*110)); },
+  squeak(){ tone(1200,.07,'square',.10); setTimeout(()=>tone(1500,.07,'square',.10),70); },
+  splash(){ tone(300,.18,'sawtooth',.10); tone(180,.22,'sine',.08); },
+  woof(){ tone(220,.12,'sawtooth',.16); setTimeout(()=>tone(180,.14,'sawtooth',.14),120); },
+  meow(){ tone(620,.18,'sine',.14); setTimeout(()=>tone(520,.18,'sine',.12),160); },
+  party(){ const n=[523,659,784,659,784,1047,988,1047]; n.forEach((f,i)=>setTimeout(()=>tone(f,.16,'triangle',.15),i*130)); }
+};
+/* =========================================================================
+   VOICE NARRATION — built-in browser speech (offline, no files, free).
+   Lets a pre-reader play alone: names colors, counts, greets by name.
+   Obeys the same mute button as the sound effects.
+   ========================================================================= */
+let VOICE=null;
+function pickVoice(){ try{ const vs=window.speechSynthesis.getVoices(); if(!vs||!vs.length)return;
+  const pref=['Samantha','Karen','Moira','Tessa','Victoria','Fiona','Google UK English Female','Google US English'];
+  VOICE = vs.find(v=>pref.indexOf(v.name)>=0) || vs.find(v=>/female/i.test(v.name)) || vs.find(v=>/^en/i.test(v.lang)) || vs[0];
+ }catch(e){} }
+try{ if(window.speechSynthesis){ pickVoice(); window.speechSynthesis.onvoiceschanged=pickVoice; } }catch(e){}
+function say(txt){ if(muted||!txt)return; try{ const sy=window.speechSynthesis; if(!sy)return;
+  sy.cancel(); const u=new SpeechSynthesisUtterance(txt); if(VOICE)u.voice=VOICE;
+  u.rate=.95; u.pitch=1.3; u.volume=1; sy.speak(u);
+ }catch(e){} }
+const COUNT=['one','two','three','four','five','six','seven','eight','nine','ten'];
+function sayCount(n){ say(COUNT[Math.min(Math.max(n,1),10)-1]); }
+const COLORNAME={ '#ff5fa2':'pink','#ff7db5':'pink','#ff6bd1':'pink','#e85a7a':'pink','#d94f7a':'pink','#ff3b6b':'red','#ff3b54':'red','#ff3b6b ':'red','#ffd23f':'yellow','#e0a000':'gold','#5fd6b4':'green','#48c9a6':'green','#b79cff':'purple','#7b4fd9':'purple','#3aa0ff':'blue','#6aa6ff':'blue','#ff8a3d':'orange','#ffffff':'white','#5a3d52':'dark','#5fc0ff':'blue','#2b1a12':'brown','#6b3b1f':'brown','#7a4a2b':'brown','#a9692e':'brown','#e8e8e8':'silver' };
+function sayColor(hex){ const n=COLORNAME[hex]; if(n)say(n+'!'); }
+const ROOMSAY={ home:"Welcome home!", closet:"Let's play dress up!", gallery:"Look at your fridge!", salon:"Welcome to the salon!", kitchen:"Let's bake a cake!", pet:"Say hi to your pet!", bedroom:"Time for the bedroom!", bath:"Bubble bath time!", garden:"Let's visit the garden!", pool:"Pool party!", party:"Let's have a party!" };
+/* =========================================================================
+   GAME STATE
+   ========================================================================= */
+const DEFAULT={
+  name:'', pet:'dog', petName:'',
+  doll:{ skin:'#f3c8a6', hair:'long', hairColor:'#6b3b1f', outfit:'dress', outfitColor:'#ff5fa2',
+         shoes:'#ff3b6b', lip:'#e85a7a', accessories:{crown:false,bow:true,glasses:false,flower:false,necklace:false,wand:false,wings:false} },
+  petState:{ happiness:60, clean:true },
+  bedroom:{ time:'day', wall:'#ffe3f1' },
+  garden:[false,false,false,false]
+};
+let G = Object.assign({}, DEFAULT, Store.get('game', {}));
+function normalizeG(){
+  G.doll = Object.assign({}, DEFAULT.doll, G.doll); G.doll.accessories=Object.assign({},DEFAULT.doll.accessories,G.doll.accessories);
+  G.petState=Object.assign({},DEFAULT.petState,G.petState);
+  G.bedroom=Object.assign({},DEFAULT.bedroom,G.bedroom);
+  if(!Array.isArray(G.garden))G.garden=DEFAULT.garden.slice();
+  if(!Array.isArray(G.gallery))G.gallery=[];               /* not in DEFAULT on purpose (no shared ref) */
+  G.gallery=G.gallery.filter(e=>e&&typeof e==='object'&&e.doll);   /* a corrupted entry must never blank the Photos room */
+  if(!Array.isArray(G.bedroom.stickers))G.bedroom.stickers=[];
+  if(!/^#[0-9a-fA-F]{3,8}$/.test(G.bedroom.wall||''))G.bedroom.wall=DEFAULT.bedroom.wall;
+}
+normalizeG();
+function save(){ return Store.set('game',G); }
+/* Atomic commit: every durable, kid-visible mutation goes through here. On a failed write the
+   world visibly rolls back — the game never shows state that storage refused. */
+function commit(fn){
+  const snap=JSON.stringify(G);
+  fn();
+  if(save())return true;
+  try{ G=JSON.parse(snap); }catch(e){}
+  normalizeG();
+  toast('Uh oh!'); say("Uh oh — it didn't save!");
+  if(typeof current==='string'&&current)openRoom(current,true);
+  return false;
+}
+/* =========================================================================
+   COLOR HELPER
+   ========================================================================= */
+function shade(hex,amt){
+  let n=parseInt(hex.slice(1),16); let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+  r=Math.max(0,Math.min(255,r+amt)); g=Math.max(0,Math.min(255,g+amt)); b=Math.max(0,Math.min(255,b+amt));
+  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+let UID=0; const uid=p=>p+(++UID);
+/* =========================================================================
+   ICON LIBRARY — all custom vector art (no emoji, no external files)
+   Each returns SVG markup in a 0 0 100 100 viewBox unless noted.
+   ========================================================================= */
+function glossDot(cx,cy,r){ return `<ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r*.7}" fill="#fff" opacity=".55"/>`; }
+const ICON={
+  heart(c='#ff4f97'){ const g=uid('h'); return `<svg viewBox="0 0 100 100"><defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(c,40)}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><path d="M50 86 C12 58 16 24 38 24 C48 24 50 34 50 34 C50 34 52 24 62 24 C84 24 88 58 50 86Z" fill="url(#${g})"/>${glossDot(38,40,9)}</svg>`; },
+  star(c='#ffd23f'){ const g=uid('s'); return `<svg viewBox="0 0 100 100"><defs><radialGradient id="${g}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="${shade(c,40)}"/><stop offset="1" stop-color="${shade(c,-25)}"/></radialGradient></defs><path d="M50 8 L61 38 L93 39 L67 59 L77 90 L50 71 L23 90 L33 59 L7 39 L39 38Z" fill="url(#${g})" stroke="${shade(c,-40)}" stroke-width="2"/></svg>`; },
+  sparkle(c='#fff7b0'){ return `<svg viewBox="0 0 100 100"><path d="M50 6 C54 38 62 46 94 50 C62 54 54 62 50 94 C46 62 38 54 6 50 C38 46 46 38 50 6Z" fill="${c}" opacity=".95"/></svg>`; },
+  flower(c='#ff5fa2'){ const g=uid('f'); return `<svg viewBox="0 0 100 100"><defs><radialGradient id="${g}" cx=".4" cy=".4" r=".7"><stop offset="0" stop-color="${shade(c,45)}"/><stop offset="1" stop-color="${c}"/></radialGradient></defs>${[0,72,144,216,288].map(a=>`<ellipse cx="50" cy="28" rx="13" ry="20" fill="url(#${g})" transform="rotate(${a} 50 50)"/>`).join('')}<circle cx="50" cy="50" r="12" fill="#ffd23f"/>${glossDot(46,46,5)}</svg>`; },
+  tulip(c='#ff7db5'){ const g=uid('tu'); return `<svg viewBox="0 0 100 100"><defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(c,40)}"/><stop offset="1" stop-color="${shade(c,-15)}"/></linearGradient></defs><path d="M30 92 C30 70 30 60 50 56 C70 60 70 70 70 92" fill="none" stroke="#4bbf86" stroke-width="6"/><path d="M28 50 C28 30 40 22 50 22 C60 22 72 30 72 50 C72 64 60 70 50 70 C40 70 28 64 28 50Z" fill="url(#${g})"/><path d="M50 22 L50 66" stroke="${shade(c,-30)}" stroke-width="3" opacity=".5"/></svg>`; },
+  balloon(c='#ff5fa2'){ const g=uid('b'); return `<svg viewBox="0 0 100 130"><defs><radialGradient id="${g}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="${shade(c,55)}"/><stop offset="1" stop-color="${shade(c,-20)}"/></radialGradient></defs><path d="M50 8 C76 8 84 34 84 52 C84 78 64 92 50 92 C36 92 16 78 16 52 C16 34 24 8 50 8Z" fill="url(#${g})"/><path d="M50 92 L46 100 L54 100Z" fill="${shade(c,-20)}"/><path d="M50 100 C58 110 42 118 50 128" fill="none" stroke="#b98" stroke-width="2"/>${glossDot(38,34,10)}</svg>`; },
+  bubble(){ const g=uid('bu'); return `<svg viewBox="0 0 100 100"><defs><radialGradient id="${g}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ffffff" stop-opacity=".9"/><stop offset=".6" stop-color="#cdeeff" stop-opacity=".35"/><stop offset="1" stop-color="#8fd3ff" stop-opacity=".55"/></radialGradient></defs><circle cx="50" cy="50" r="44" fill="url(#${g})" stroke="#bfeaff" stroke-width="2"/><ellipse cx="36" cy="34" rx="12" ry="8" fill="#fff" opacity=".85"/></svg>`; },
+  droplet(c='#6ec1ff'){ const g=uid('d'); return `<svg viewBox="0 0 100 100"><defs><radialGradient id="${g}" cx=".4" cy=".55" r=".7"><stop offset="0" stop-color="${shade(c,45)}"/><stop offset="1" stop-color="${shade(c,-15)}"/></radialGradient></defs><path d="M50 8 C50 8 80 48 80 66 C80 84 66 94 50 94 C34 94 20 84 20 66 C20 48 50 8 50 8Z" fill="url(#${g})"/>${glossDot(40,60,8)}</svg>`; },
+  butterfly(c='#b79cff'){ const g=uid('bf'); return `<svg viewBox="0 0 100 100"><defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(c,45)}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><ellipse cx="30" cy="34" rx="22" ry="18" fill="url(#${g})"/><ellipse cx="70" cy="34" rx="22" ry="18" fill="url(#${g})"/><ellipse cx="32" cy="64" rx="16" ry="14" fill="url(#${g})"/><ellipse cx="68" cy="64" rx="16" ry="14" fill="url(#${g})"/><rect x="47" y="26" width="6" height="50" rx="3" fill="#5a3d52"/><circle cx="50" cy="24" r="4" fill="#5a3d52"/></svg>`; },
+  cherry(){ return `<svg viewBox="0 0 100 100"><path d="M50 18 C58 30 72 32 78 40" fill="none" stroke="#4bbf86" stroke-width="5"/><path d="M50 18 C44 30 32 34 28 44" fill="none" stroke="#4bbf86" stroke-width="5"/><circle cx="30" cy="64" r="20" fill="#e8324f"/><circle cx="72" cy="62" r="20" fill="#ff4f5e"/><ellipse cx="24" cy="58" rx="6" ry="4" fill="#fff" opacity=".6"/><ellipse cx="66" cy="56" rx="6" ry="4" fill="#fff" opacity=".6"/></svg>`; },
+  strawberry(){ return `<svg viewBox="0 0 100 100"><path d="M30 26 L50 36 L70 26 L62 40 L50 36 L38 40Z" fill="#4bbf86"/><path d="M50 34 C78 34 84 56 72 78 C64 92 50 96 50 96 C50 96 36 92 28 78 C16 56 22 34 50 34Z" fill="#ff3b54"/><g fill="#ffe07a">${[[40,52],[58,52],[50,64],[36,70],[64,70],[50,82]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="2.4"/>`).join('')}</g></svg>`; },
+  rainbow(){ return `<svg viewBox="0 0 100 100"><g fill="none" stroke-width="7"><path d="M14 80 A36 36 0 0 1 86 80" stroke="#ff5f6d"/><path d="M22 80 A28 28 0 0 1 78 80" stroke="#ffc24b"/><path d="M30 80 A20 20 0 0 1 70 80" stroke="#5fd6b4"/><path d="M38 80 A12 12 0 0 1 62 80" stroke="#6aa6ff"/></g></svg>`; },
+  candy(){ return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#ff7db5"/><path d="M50 50 m-22 0 a22 22 0 0 1 22 -22" fill="#fff" opacity=".5"/><path d="M28 50 L8 38 L12 58 L8 78Z" fill="#ff9ec0"/><path d="M72 50 L92 38 L88 58 L92 78Z" fill="#ff9ec0"/>${glossDot(44,44,6)}</svg>`; },
+  cupcake(c='#ff5fa2'){ return `<svg viewBox="0 0 100 100"><path d="M28 56 L72 56 L66 92 L34 92Z" fill="#f0b27a"/><g stroke="#d68a4a" stroke-width="2"><line x1="40" y1="58" x2="44" y2="90"/><line x1="56" y1="58" x2="60" y2="90"/></g><path d="M24 56 C24 34 76 34 76 56 C76 58 24 58 24 56Z" fill="${c}"/><circle cx="50" cy="30" r="6" fill="#ff3b54"/></svg>`; },
+  egg(){ return `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="56" rx="30" ry="38" fill="#fff7ee" stroke="#e8d5c0" stroke-width="2"/><ellipse cx="40" cy="42" rx="9" ry="13" fill="#fff" opacity=".7"/></svg>`; },
+  milk(){ return `<svg viewBox="0 0 100 100"><path d="M34 20 L66 20 L66 34 L72 46 L72 88 L28 88 L28 46 L34 34Z" fill="#eef4ff" stroke="#bcd0e8" stroke-width="2"/><rect x="32" y="54" width="36" height="20" rx="3" fill="#6aa6ff"/><circle cx="50" cy="64" r="6" fill="#fff"/></svg>`; },
+  flour(){ return `<svg viewBox="0 0 100 100"><path d="M30 38 L70 38 L66 86 L34 86Z" fill="#f3e9d8" stroke="#d8c6a8" stroke-width="2"/><rect x="36" y="50" width="28" height="22" rx="3" fill="#fff"/><path d="M40 56 H60 M40 62 H58 M40 68 H56" stroke="#caa46a" stroke-width="2"/><path d="M34 38 C34 26 66 26 66 38Z" fill="#e6d6ba"/></svg>`; },
+  cocoa(){ return `<svg viewBox="0 0 100 100"><rect x="22" y="34" width="56" height="40" rx="6" fill="#7a4a2b"/><g stroke="#5a3418" stroke-width="2"><line x1="36" y1="34" x2="36" y2="74"/><line x1="50" y1="34" x2="50" y2="74"/><line x1="64" y1="34" x2="64" y2="74"/><line x1="22" y1="54" x2="78" y2="54"/></g><rect x="22" y="34" width="56" height="8" rx="4" fill="#9a6a44"/></svg>`; },
+  sugar(){ return `<svg viewBox="0 0 100 100"><g fill="#fff" stroke="#dfe8f0" stroke-width="2">${[[34,40],[52,36],[44,52],[60,50],[38,62],[56,64]].map(p=>`<rect x="${p[0]}" y="${p[1]}" width="13" height="13" rx="2"/>`).join('')}</g></svg>`; },
+  bone(){ return `<svg viewBox="0 0 100 100"><g fill="#fff4e0" stroke="#e0cba8" stroke-width="2"><circle cx="26" cy="36" r="11"/><circle cx="40" cy="34" r="11"/><circle cx="60" cy="66" r="11"/><circle cx="74" cy="64" r="11"/><rect x="30" y="36" width="42" height="14" rx="7" transform="rotate(28 50 50)"/></g></svg>`; },
+  ball(){ return `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="36" fill="#ffd23f"/><path d="M14 50 Q50 30 86 50" stroke="#e63d86" stroke-width="4" fill="none"/><path d="M14 50 Q50 70 86 50" stroke="#e63d86" stroke-width="4" fill="none"/>${glossDot(38,38,9)}</svg>`; },
+  soap(){ return `<svg viewBox="0 0 100 100"><rect x="22" y="38" width="56" height="34" rx="12" fill="#ffb8d8"/><rect x="22" y="38" width="56" height="14" rx="10" fill="#ffd0e6"/><ellipse cx="40" cy="48" rx="8" ry="4" fill="#fff" opacity=".7"/></svg>`; },
+  duck(){ return `<svg viewBox="0 0 100 100"><ellipse cx="46" cy="64" rx="34" ry="24" fill="#ffd23f"/><circle cx="68" cy="44" r="18" fill="#ffd23f"/><path d="M82 44 L98 48 L82 54Z" fill="#ff8a3d"/><circle cx="72" cy="40" r="3.5" fill="#3a2230"/><path d="M20 64 Q34 78 52 72" stroke="#e0a800" stroke-width="3" fill="none"/>${glossDot(40,56,8)}</svg>`; },
+  home(){ return `<svg viewBox="0 0 100 100"><path d="M50 16 L86 46 L78 46 L78 84 L22 84 L22 46 L14 46Z" fill="#ff7db5"/><path d="M50 16 L86 46 L14 46Z" fill="#ff4f97"/><rect x="42" y="60" width="16" height="24" fill="#fff"/><rect x="30" y="54" width="12" height="12" fill="#cdeeff"/><rect x="58" y="54" width="12" height="12" fill="#cdeeff"/></svg>`; },
+  paw(){ return `<svg viewBox="0 0 100 100"><circle cx="50" cy="62" r="20" fill="currentColor"/><circle cx="28" cy="40" r="9" fill="currentColor"/><circle cx="44" cy="30" r="9" fill="currentColor"/><circle cx="60" cy="30" r="9" fill="currentColor"/><circle cx="74" cy="42" r="9" fill="currentColor"/></svg>`; },
+  moon(){ return `<svg viewBox="0 0 100 100"><path d="M64 10 C36 16 18 40 18 62 C18 80 32 92 50 92 C70 92 84 78 86 60 C76 72 58 74 46 62 C34 50 38 28 64 10Z" fill="#ffe07a" stroke="#e0bb50" stroke-width="3"/><circle cx="40" cy="56" r="5" fill="#ffd23f" opacity=".7"/></svg>`; },
+  discoball(){ return `<svg viewBox="0 0 100 100"><line x1="50" y1="0" x2="50" y2="14" stroke="#cbd5e0" stroke-width="3"/><circle cx="50" cy="52" r="36" fill="#dfe9f4"/><g stroke="#aebfd4" stroke-width="2"><line x1="14" y1="52" x2="86" y2="52"/><line x1="20" y1="34" x2="80" y2="34"/><line x1="20" y1="70" x2="80" y2="70"/><line x1="50" y1="16" x2="50" y2="88"/><line x1="32" y1="20" x2="32" y2="84"/><line x1="68" y1="20" x2="68" y2="84"/></g><ellipse cx="38" cy="34" rx="9" ry="6" fill="#fff" opacity=".8"/></svg>`; }
+};
+/* Nav icons (simple, themed) */
+const NAVICON={
+  closet:`<svg viewBox="0 0 100 100"><path d="M50 22 C40 22 36 30 36 36 L30 78 L70 78 L64 36 C64 30 60 22 50 22Z" fill="#ff5fa2"/><path d="M36 36 L64 36" stroke="#fff" stroke-width="3"/><circle cx="50" cy="20" r="6" fill="#ffd23f"/></svg>`,
+  salon:`<svg viewBox="0 0 100 100"><rect x="30" y="16" width="40" height="50" rx="20" fill="#cdeeff" stroke="#ff7db5" stroke-width="4"/><rect x="46" y="66" width="8" height="18" fill="#ff7db5"/><rect x="34" y="84" width="32" height="6" rx="3" fill="#ff7db5"/></svg>`,
+  kitchen:`<svg viewBox="0 0 100 100"><path d="M30 50 C30 30 70 30 70 50Z" fill="#ff7db5"/><rect x="28" y="50" width="44" height="34" rx="6" fill="#ffd23f"/><circle cx="50" cy="34" r="5" fill="#ff3b54"/></svg>`,
+  pet:`<svg viewBox="0 0 100 100" style="color:#caa46a">${ICON.paw().replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`,
+  bedroom:`<svg viewBox="0 0 100 100"><rect x="16" y="50" width="68" height="26" rx="6" fill="#b79cff"/><rect x="22" y="40" width="20" height="14" rx="5" fill="#fff"/><path d="M16 62 L84 62" stroke="#fff" stroke-width="3"/></svg>`,
+  bath:`<svg viewBox="0 0 100 100"><rect x="20" y="48" width="60" height="28" rx="14" fill="#cdeeff" stroke="#6ec1ff" stroke-width="4"/><circle cx="34" cy="36" r="6" fill="#bfeaff"/><circle cx="46" cy="30" r="5" fill="#bfeaff"/></svg>`,
+  garden:`<svg viewBox="0 0 100 100">${ICON.flower('#ff7db5').replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg>`,
+  pool:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="#ff5fa2" stroke-width="10"/><circle cx="50" cy="50" r="14" fill="#6ec1ff"/></svg>`,
+  party:`<svg viewBox="0 0 100 100"><path d="M22 82 L44 38 L62 56Z" fill="#ffd23f"/><circle cx="60" cy="30" r="6" fill="#ff5fa2"/><circle cx="76" cy="46" r="5" fill="#5fd6b4"/><circle cx="40" cy="24" r="5" fill="#6aa6ff"/></svg>`,
+  gallery:`<svg viewBox="0 0 100 100"><rect x="26" y="10" width="48" height="80" rx="9" fill="#dff2ff" stroke="#9fc9e8" stroke-width="4"/><line x1="26" y1="38" x2="74" y2="38" stroke="#9fc9e8" stroke-width="4"/><rect x="34" y="46" width="24" height="26" rx="2" fill="#fff" stroke="#ffb8d8" stroke-width="2"/><circle cx="46" cy="57" r="7" fill="#ff7db5"/><circle cx="64" cy="22" r="4" fill="#ff5fa2"/><circle cx="38" cy="24" r="4" fill="#ffd23f"/></svg>`,
+  home2:`<svg viewBox="0 0 100 100"><path d="M14 46 L50 16 L86 46 Z" fill="#ff4f97"/><rect x="22" y="46" width="56" height="40" rx="6" fill="#ffd9ec" stroke="#fff" stroke-width="3"/><rect x="30" y="54" width="14" height="12" rx="3" fill="#cdeeff"/><rect x="56" y="54" width="14" height="12" rx="3" fill="#cdeeff"/><rect x="42" y="64" width="16" height="22" rx="6" fill="#e63d86"/><path d="M50 22 c-3 -5 -11 -3 -11 2 c0 4 7 8 11 11 c4 -3 11 -7 11 -11 c0 -5 -8 -7 -11 -2Z" fill="#fff"/></svg>`
+};
+/* =========================================================================
+   CHARACTER ART — doll
+   ========================================================================= */
+function hairBack(style,c){
+  const dk=shade(c,-40), md=shade(c,-20), dd=shade(c,-30);
+  switch(style){
+    case 'long': return `<path d="M96 120 C58 150 60 300 96 360 C104 300 102 260 110 210 L120 150Z" fill="${dk}"/>
+      <path d="M224 120 C262 150 260 300 224 360 C216 300 218 260 210 210 L200 150Z" fill="${dk}"/>
+      <path d="M104 130 C74 165 78 300 110 350 L120 200 C140 175 180 175 200 200 L210 350 C242 300 246 165 216 130Z" fill="${md}"/>`;
+    case 'bob': return `<path d="M104 128 C72 160 76 232 110 250 L210 250 C244 232 248 160 216 128 C214 158 200 150 196 168 L124 168 C120 150 106 156 104 128Z" fill="${md}"/>`;
+    case 'pony': return `<path d="M108 130 C86 160 90 214 112 230 L208 230 C230 214 234 160 212 130Z" fill="${md}"/>
+      <path d="M212 150 C262 150 290 206 272 268 C264 298 240 304 224 292 C250 254 240 200 206 182Z" fill="${dd}"/>
+      <path d="M214 156 C250 160 264 200 256 248" stroke="${shade(c,40)}" stroke-width="4" fill="none" opacity=".4"/>`;
+    case 'bun': return `<path d="M110 132 C92 160 96 210 116 226 L204 226 C224 210 228 160 210 132Z" fill="${md}"/>`;
+    case 'curly': return `<path d="M104 140 C74 165 78 230 112 244 L208 244 C242 230 246 165 216 140Z" fill="${md}"/>
+      <g fill="${md}"><circle cx="96" cy="180" r="20"/><circle cx="90" cy="220" r="18"/><circle cx="224" cy="180" r="20"/><circle cx="230" cy="220" r="18"/><circle cx="104" cy="252" r="16"/><circle cx="216" cy="252" r="16"/></g>`;
+    case 'pigtails': return `<path d="M108 130 C88 158 92 210 112 226 L208 226 C228 210 232 158 212 130Z" fill="${md}"/>
+      <path d="M92 186 C70 212 68 260 88 292 C104 302 118 292 118 276 C104 252 102 216 108 192Z" fill="${dd}"/>
+      <path d="M228 186 C250 212 252 260 232 292 C216 302 202 292 202 276 C216 252 218 216 212 192Z" fill="${dd}"/>
+      <path d="M96 198 C84 222 84 254 92 276 M224 198 C236 222 236 254 228 276" stroke="${shade(c,40)}" stroke-width="4" fill="none" opacity=".4"/>
+      <circle cx="100" cy="184" r="9" fill="#ff5fa2"/><circle cx="220" cy="184" r="9" fill="#ff5fa2"/>`;
+    case 'braid': return `<path d="M106 130 C84 160 88 214 110 228 L210 228 C232 214 236 160 214 130Z" fill="${md}"/>
+      <g fill="${dd}"><ellipse cx="220" cy="206" rx="15" ry="13"/><ellipse cx="226" cy="232" rx="14" ry="13"/><ellipse cx="230" cy="258" rx="13" ry="12"/><ellipse cx="232" cy="283" rx="12" ry="11"/><ellipse cx="233" cy="306" rx="10" ry="10"/></g>
+      <path d="M226 318 L234 334 L222 332Z" fill="${dd}"/><circle cx="231" cy="316" r="7" fill="#ffd23f"/>
+      <path d="M214 200 C222 232 226 270 228 300" stroke="${shade(c,40)}" stroke-width="3" fill="none" opacity=".35"/>`;
+    default: return '';
+  }
+}
+function hairFront(style,c,gid){
+  const hl=shade(c,52), dk=shade(c,-30);
+  const bangs=`<path d="M100 150 C96 116 116 86 160 86 C204 86 224 116 220 150 C214 128 200 116 196 130 C190 110 176 116 172 132 C166 112 154 112 148 132 C144 116 130 110 124 130 C120 116 106 128 100 150Z" fill="url(#${gid})"/>
+    <path d="M128 104 C150 92 180 96 196 116" stroke="${hl}" stroke-width="6" fill="none" opacity=".5" stroke-linecap="round"/>`;
+  let extra='';
+  if(style==='pony') extra=`<circle cx="214" cy="150" r="9" fill="${dk}"/>`;
+  if(style==='pigtails') extra=`<circle cx="104" cy="154" r="8" fill="${dk}"/><circle cx="216" cy="154" r="8" fill="${dk}"/>`;
+  if(style==='braid') extra=`<circle cx="214" cy="154" r="8" fill="${dk}"/>`;
+  if(style==='bun') extra=`<circle cx="160" cy="76" r="26" fill="url(#${gid})"/><ellipse cx="150" cy="68" rx="9" ry="5" fill="${hl}" opacity=".5"/><rect x="150" y="98" width="20" height="10" rx="4" fill="${dk}"/>`;
+  if(style==='curly') extra=`<circle cx="112" cy="122" r="17" fill="url(#${gid})"/><circle cx="208" cy="122" r="17" fill="url(#${gid})"/>`;
+  return bangs+extra;
+}
+function outfit(style,c,gid){
+  const lt=shade(c,30), dk=shade(c,-26);
+  switch(style){
+    case 'dress': return `<path d="M118 206 C140 196 180 196 202 206 L210 252 L110 252Z" fill="url(#${gid})"/>
+      <path d="M110 252 C100 302 86 350 70 386 C120 406 200 406 250 386 C234 350 220 302 210 252Z" fill="url(#${gid})"/>
+      <path d="M160 210 L160 394" stroke="${lt}" stroke-width="5" opacity=".3"/>
+      <path d="M132 258 C126 314 116 352 104 382" stroke="${dk}" stroke-width="5" fill="none" opacity=".35"/>
+      <path d="M188 258 C194 314 204 352 216 382" stroke="${dk}" stroke-width="5" fill="none" opacity=".35"/>
+      <path d="M70 386 C120 406 200 406 250 386" stroke="${lt}" stroke-width="6" fill="none" opacity=".5"/>
+      <path d="M132 206 C146 220 174 220 188 206" stroke="${lt}" stroke-width="5" fill="none" opacity=".6"/>`;
+    case 'topskirt': return `<path d="M118 206 C140 196 180 196 202 206 L208 268 L112 268Z" fill="url(#${gid})"/>
+      <path d="M108 270 C100 320 92 356 80 388 C120 406 200 406 240 388 C228 356 220 320 212 270Z" fill="${dk}"/>
+      <rect x="108" y="262" width="104" height="13" rx="6" fill="${lt}"/>
+      <path d="M134 276 C130 320 122 356 112 384 M160 276 L160 396 M186 276 C190 320 198 356 208 384" stroke="${shade(c,-40)}" stroke-width="3" fill="none" opacity=".4"/>
+      <path d="M80 388 C120 406 200 406 240 388" stroke="${shade(c,-10)}" stroke-width="5" fill="none" opacity=".5"/>`;
+    case 'party': return `<path d="M118 206 C140 194 180 194 202 206 L206 248 L114 248Z" fill="url(#${gid})"/>
+      <path d="M114 248 C96 308 76 356 56 392 C120 418 200 418 264 392 C244 356 224 308 206 248Z" fill="${lt}"/>
+      <path d="M120 248 C106 300 94 344 82 380 C120 400 200 400 238 380 C226 344 214 300 200 248Z" fill="url(#${gid})"/>
+      <rect x="110" y="242" width="100" height="14" rx="7" fill="#ffd23f"/>
+      <g fill="#fff" opacity=".8"><circle cx="120" cy="300" r="4"/><circle cx="160" cy="330" r="4"/><circle cx="200" cy="300" r="4"/><circle cx="140" cy="360" r="4"/><circle cx="185" cy="362" r="4"/></g>
+      <path d="M56 392 C120 418 200 418 264 392" stroke="${shade(c,40)}" stroke-width="6" fill="none" opacity=".5"/>`;
+    case 'swim': return `<path d="M124 208 C140 198 180 198 196 208 L194 300 C178 316 142 316 126 300Z" fill="url(#${gid})"/>
+      <path d="M136 206 L140 188 M184 206 L180 188" stroke="${c}" stroke-width="7" stroke-linecap="round"/>
+      <path d="M126 270 C150 280 170 280 194 270" stroke="${lt}" stroke-width="6" fill="none"/>
+      <g fill="#fff" opacity=".7"><circle cx="148" cy="236" r="4"/><circle cx="172" cy="236" r="4"/><circle cx="160" cy="252" r="4"/></g>`;
+    case 'pj': return `<path d="M118 206 C140 196 180 196 202 206 C214 290 214 372 210 422 C180 434 140 434 110 422 C106 372 106 290 118 206Z" fill="url(#${gid})"/>
+      <path d="M132 206 C146 218 174 218 188 206" stroke="${lt}" stroke-width="5" fill="none" opacity=".6"/>
+      <path d="M160 212 L160 420" stroke="${lt}" stroke-width="4" opacity=".25"/>
+      <g fill="#fff" opacity=".7"><circle cx="138" cy="250" r="5"/><circle cx="182" cy="270" r="5"/><circle cx="140" cy="320" r="5"/><circle cx="184" cy="350" r="5"/><circle cx="150" cy="390" r="5"/></g>
+      <path d="M110 422 q12 10 25 0 q12 10 25 0 q12 10 25 0" stroke="${lt}" stroke-width="4" fill="none" opacity=".6"/>`;
+    case 'gown': return `<path d="M118 206 C140 196 180 196 202 206 L208 250 L112 250Z" fill="url(#${gid})"/>
+      <path d="M112 250 C92 320 70 366 54 394 C130 418 190 418 266 394 C250 366 228 320 208 250Z" fill="url(#${gid})"/>
+      <path d="M92 330 C140 352 180 352 228 330" stroke="${lt}" stroke-width="5" fill="none" opacity=".5"/>
+      <path d="M76 366 C140 392 180 392 244 366" stroke="${lt}" stroke-width="5" fill="none" opacity=".5"/>
+      <path d="M54 394 C130 418 190 418 266 394" stroke="${shade(c,45)}" stroke-width="7" fill="none" opacity=".6"/>
+      <rect x="112" y="244" width="96" height="12" rx="6" fill="#ffd23f"/>
+      <g fill="#fff" opacity=".85"><circle cx="120" cy="300" r="3.5"/><circle cx="160" cy="282" r="3.5"/><circle cx="200" cy="300" r="3.5"/><circle cx="138" cy="346" r="3.5"/><circle cx="184" cy="348" r="3.5"/><circle cx="160" cy="386" r="3.5"/></g>
+      <path d="M132 206 C146 220 174 220 188 206" stroke="${lt}" stroke-width="5" fill="none" opacity=".6"/>`;
+    case 'hero': return `<path d="M196 208 C232 240 244 314 238 366 C226 378 208 374 202 362 C210 314 206 256 192 226Z" fill="${dk}" opacity=".9"/>
+      <path d="M118 206 C140 196 180 196 202 206 C210 270 210 330 206 374 C178 388 142 388 114 374 C110 330 110 270 118 206Z" fill="url(#${gid})"/>
+      <path d="M160 212 L160 380" stroke="${lt}" stroke-width="4" opacity=".25"/>
+      <path d="M160 250 L168 272 L191 273 L173 287 L179 309 L160 296 L141 309 L147 287 L129 273 L152 272Z" fill="#ffd23f" stroke="#e0a800" stroke-width="2"/>
+      <rect x="114" y="368" width="92" height="14" rx="7" fill="#ffd23f"/>
+      <path d="M132 206 C146 218 174 218 188 206" stroke="${lt}" stroke-width="5" fill="none" opacity=".6"/>`;
+    case 'tutu': return `<path d="M122 206 C142 198 178 198 198 206 L196 278 C178 290 142 290 124 278Z" fill="url(#${gid})"/>
+      <path d="M112 270 C92 296 86 318 84 334 C136 352 184 352 236 334 C234 318 228 296 208 270 C178 286 142 286 112 270Z" fill="${lt}" opacity=".92"/>
+      <path d="M118 272 C104 292 98 310 96 324 C140 340 180 340 224 324 C222 310 216 292 202 272 C176 286 144 286 118 272Z" fill="url(#${gid})" opacity=".85"/>
+      <path d="M96 324 C140 340 180 340 224 324" stroke="#fff" stroke-width="4" fill="none" opacity=".6"/>
+      <path d="M136 206 L140 190 M184 206 L180 190" stroke="${c}" stroke-width="7" stroke-linecap="round"/>
+      <g fill="#fff" opacity=".7"><circle cx="146" cy="238" r="4"/><circle cx="174" cy="238" r="4"/><circle cx="160" cy="258" r="4"/></g>`;
+    default: return '';
+  }
+}
+function accessoriesBack(a){
+  /* wings render BEHIND body AND hair — injected right after the ground shadow, before hairBack */
+  if(!a.wings) return '';
+  return `<g opacity=".88"><path d="M118 232 C58 196 40 246 66 286 C84 312 116 300 126 272Z" fill="#dff2ff" stroke="#bfe2ff" stroke-width="3"/>
+    <path d="M202 232 C262 196 280 246 254 286 C236 312 204 300 194 272Z" fill="#dff2ff" stroke="#bfe2ff" stroke-width="3"/>
+    <path d="M112 268 C76 256 64 280 80 300 C92 312 112 304 118 288Z" fill="#eaf8ff" stroke="#bfe2ff" stroke-width="2"/>
+    <path d="M208 268 C244 256 256 280 240 300 C228 312 208 304 202 288Z" fill="#eaf8ff" stroke="#bfe2ff" stroke-width="2"/>
+    <circle cx="84" cy="252" r="6" fill="#fff" opacity=".8"/><circle cx="236" cy="252" r="6" fill="#fff" opacity=".8"/></g>`;
+}
+function accessoriesSVG(a){
+  let s='';
+  if(a.wand)    s+=`<g transform="translate(228,316) rotate(-20)"><rect x="-3.5" y="-56" width="7" height="56" rx="3.5" fill="#ffb8d8"/><g transform="translate(0,-64) scale(.4)"><path d="M0 -30 L9 -7 L33 -5 L14 10 L20 33 L0 19 L-20 33 L-14 10 L-33 -5 L-9 -7Z" fill="#ffd23f" stroke="#e0a800" stroke-width="4"/></g><circle cx="0" cy="-64" r="3" fill="#fff" opacity=".85"/></g>`;
+  if(a.crown)   s+=`<path d="M126 80 L142 106 L160 72 L178 106 L194 80 L188 114 L132 114Z" fill="#ffd23f" stroke="#e0a800" stroke-width="2"/><circle cx="160" cy="72" r="6" fill="#ff5fa2"/><circle cx="142" cy="108" r="4" fill="#ff5fa2"/><circle cx="178" cy="108" r="4" fill="#6aa6ff"/>`;
+  if(a.bow)     s+=`<g transform="translate(206,104)"><path d="M0 0 L-26 -14 C-34 -4 -34 8 -26 14 Z" fill="#ff3b6b"/><path d="M0 0 L26 -14 C34 -4 34 8 26 14 Z" fill="#ff3b6b"/><circle cx="0" cy="0" r="8" fill="#ff7da6"/></g>`;
+  if(a.glasses) s+=`<g stroke="#5a3d52" stroke-width="4" fill="rgba(180,220,255,.25)"><circle cx="135" cy="151" r="19"/><circle cx="185" cy="151" r="19"/><line x1="154" y1="151" x2="166" y2="151"/></g>`;
+  if(a.flower)  s+=`<g transform="translate(108,108) scale(.5)">${ICON.flower('#ff5fa2').replace(/^<svg[^>]*>|<\/svg>$/g,'')}</g>`;
+  if(a.necklace)s+=`<path d="M138 198 C150 214 170 214 182 198" stroke="#ffd23f" stroke-width="4" fill="none"/><circle cx="160" cy="212" r="6" fill="#ff5fa2"/>`;
+  return s;
+}
+function renderDoll(opt){
+  opt=opt||{};
+  const d=cleanDoll(opt.doll||G.doll), sleeping=opt.sleeping;  /* opt.doll = gallery override; every render sanitized */
+  const sk=d.skin, skD=shade(sk,-22), skL=shade(sk,20), hc=d.hairColor, lip=d.lip;
+  const shoes=d.shoes, shD=shade(shoes,-18), shL=shade(shoes,40);
+  const sg=uid('s'),hg=uid('h'),og=uid('o'),eg=uid('e'),cg=uid('c');
+  return `<svg viewBox="0 0 320 470" width="${opt.w||240}" aria-label="doll">
+  <defs>
+    <radialGradient id="${sg}" cx=".42" cy=".38" r=".75"><stop offset="0" stop-color="${skL}"/><stop offset="1" stop-color="${skD}"/></radialGradient>
+    <linearGradient id="${hg}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${shade(hc,30)}"/><stop offset="1" stop-color="${shade(hc,-34)}"/></linearGradient>
+    <linearGradient id="${og}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="${shade(d.outfitColor,30)}"/><stop offset=".55" stop-color="${d.outfitColor}"/><stop offset="1" stop-color="${shade(d.outfitColor,-26)}"/></linearGradient>
+    <radialGradient id="${eg}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#8a6a4e"/><stop offset="1" stop-color="#3a2418"/></radialGradient>
+    <radialGradient id="${cg}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff9ec0"/><stop offset="1" stop-color="#ff9ec000"/></radialGradient>
+  </defs>
+  <ellipse cx="160" cy="452" rx="92" ry="16" fill="#5a3d52" opacity=".16"/>
+  ${accessoriesBack(d.accessories)}
+  ${hairBack(d.hair,hc)}
+  <path d="M138 248 C132 320 132 392 134 424 C140 432 152 432 156 424 C158 392 158 320 158 248Z" fill="url(#${sg})"/>
+  <path d="M162 248 C162 320 162 392 164 424 C168 432 180 432 186 424 C188 392 188 320 182 248Z" fill="url(#${sg})"/>
+  <path d="M124 422 C122 434 128 442 144 442 C156 442 158 434 156 425 C148 431 134 431 124 422Z" fill="${shD}"/>
+  <path d="M196 422 C198 434 192 442 176 442 C164 442 162 434 164 425 C172 431 186 431 196 422Z" fill="${shD}"/>
+  <ellipse cx="144" cy="428" rx="17" ry="9" fill="${shoes}"/><ellipse cx="176" cy="428" rx="17" ry="9" fill="${shoes}"/>
+  <path d="M133 422 H155 M165 422 H187" stroke="${shL}" stroke-width="3" stroke-linecap="round"/>
+  <path d="M120 210 C92 240 82 286 86 318 C98 324 106 318 108 310 C106 284 116 250 134 228Z" fill="url(#${sg})"/>
+  <path d="M200 210 C228 240 238 286 234 318 C222 324 214 318 212 310 C214 284 204 250 186 228Z" fill="url(#${sg})"/>
+  <circle cx="95" cy="318" r="13" fill="url(#${sg})"/><circle cx="225" cy="318" r="13" fill="url(#${sg})"/>
+  ${outfit(d.outfit,d.outfitColor,og)}
+  <path d="M150 184 C150 200 170 200 170 184 L170 168 L150 168Z" fill="${skD}"/>
+  <path d="M160 92 C120 92 100 124 100 150 C100 184 128 206 160 206 C192 206 220 184 220 150 C220 124 200 92 160 92Z" fill="url(#${sg})"/>
+  <circle cx="102" cy="152" r="11" fill="url(#${sg})"/><circle cx="218" cy="152" r="11" fill="url(#${sg})"/>
+  <circle cx="120" cy="166" r="16" fill="url(#${cg})"/><circle cx="200" cy="166" r="16" fill="url(#${cg})"/>
+  <path d="M122 130 Q138 124 150 130" stroke="${shade(hc,-34)}" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M170 130 Q182 124 198 130" stroke="${shade(hc,-34)}" stroke-width="4" fill="none" stroke-linecap="round"/>
+  ${sleeping
+    ? `<path d="M120 150 C126 158 144 158 150 150" stroke="#3a2418" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+       <path d="M170 150 C176 158 194 158 200 150" stroke="#3a2418" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+       <path d="M124 156 l-5 4 M132 158 l-3 5 M188 158 l3 5 M196 156 l5 4" stroke="#3a2418" stroke-width="2.5" stroke-linecap="round"/>`
+    : `<path d="M118 150 C118 138 150 138 150 150 C150 164 118 164 118 150Z" fill="#fff"/>
+       <circle cx="135" cy="151" r="12" fill="url(#${eg})"/><circle cx="135" cy="151" r="6" fill="#1d120a"/><circle cx="139" cy="146" r="3.4" fill="#fff"/><circle cx="131" cy="155" r="2" fill="#fff" opacity=".8"/>
+       <path d="M117 146 C124 136 146 136 152 146" stroke="#3a2418" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M117 146 l-6 -4 M124 140 l-3 -6" stroke="#3a2418" stroke-width="3" stroke-linecap="round"/>
+       <path d="M170 150 C170 138 202 138 202 150 C202 164 170 164 170 150Z" fill="#fff"/>
+       <circle cx="185" cy="151" r="12" fill="url(#${eg})"/><circle cx="185" cy="151" r="6" fill="#1d120a"/><circle cx="189" cy="146" r="3.4" fill="#fff"/><circle cx="181" cy="155" r="2" fill="#fff" opacity=".8"/>
+       <path d="M168 146 C174 136 196 136 203 146" stroke="#3a2418" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M203 146 l6 -4 M196 140 l3 -6" stroke="#3a2418" stroke-width="3" stroke-linecap="round"/>
+       <g class="blinkLid"><ellipse cx="134" cy="149" rx="18" ry="10" fill="url(#${sg})"/><ellipse cx="186" cy="149" rx="18" ry="10" fill="url(#${sg})"/></g>`}
+  <path d="M158 162 q4 4 6 0" stroke="${skD}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  ${sleeping
+    ? `<path d="M150 178 q10 8 20 0" stroke="${lip}" stroke-width="4" fill="none" stroke-linecap="round"/>`
+    : `<path d="M146 176 C154 186 166 186 174 176 C166 182 154 182 146 176Z" fill="${lip}"/><path d="M148 177 C156 182 164 182 172 177" stroke="#fff" stroke-width="2" fill="none" opacity=".5"/>`}
+  ${hairFront(d.hair,hc,hg)}
+  ${accessoriesSVG(d.accessories)}
+  ${sleeping?'<g transform="translate(214,72)" fill="#b79cff" font-weight="800" font-family="sans-serif"><text font-size="26">z</text><text x="16" y="-14" font-size="20">z</text></g>':''}
+  </svg>`;
+}
+/* PET */
+function renderPet(){
+  const dog=G.pet==='dog', happy=G.petState.happiness, dirty=!G.petState.clean;
+  const fur=dog?'#e3b878':'#b8bcc2', furD=shade(fur,-26), furL=shade(fur,22), ear=shade(fur,-14);
+  const fg=uid('f'),eg=uid('pe');
+  const mouth = happy>40
+    ? `<path d="M150 182 L150 192 M150 192 C140 204 124 200 120 190 M150 192 C160 204 176 200 180 190" stroke="#5a3d52" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M138 196 q12 8 24 0" fill="#ff7d9e"/>`
+    : `<path d="M150 184 L150 192 M126 198 C136 190 164 190 174 198" stroke="#5a3d52" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 300 320" width="240" aria-label="pet">
+  <defs>
+    <radialGradient id="${fg}" cx=".42" cy=".36" r=".72"><stop offset="0" stop-color="${furL}"/><stop offset="1" stop-color="${furD}"/></radialGradient>
+    <radialGradient id="${eg}" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#5a3a22"/><stop offset="1" stop-color="#221208"/></radialGradient>
+  </defs>
+  <ellipse cx="150" cy="300" rx="96" ry="16" fill="#5a3d52" opacity=".16"/>
+  ${dog
+    ? `<path d="M70 120 C40 110 36 174 70 198 C92 182 92 140 78 120Z" fill="${ear}"/><path d="M230 120 C260 110 264 174 230 198 C208 182 208 140 222 120Z" fill="${ear}"/>`
+    : `<path d="M74 120 L58 56 L116 92Z" fill="${ear}"/><path d="M226 120 L242 56 L184 92Z" fill="${ear}"/><path d="M82 112 L72 74 L110 96Z" fill="#ffb8c8"/><path d="M218 112 L228 74 L190 96Z" fill="#ffb8c8"/>`}
+  <path d="M70 250 C60 200 90 188 150 188 C210 188 240 200 230 250 C236 288 200 300 150 300 C100 300 64 288 70 250Z" fill="url(#${fg})"/>
+  <path d="M150 220 C180 220 198 240 196 268 C190 286 110 286 104 268 C102 240 120 220 150 220Z" fill="${furL}"/>
+  <path d="M150 70 C96 70 70 112 70 150 C70 196 104 226 150 226 C196 226 230 196 230 150 C230 112 204 70 150 70Z" fill="url(#${fg})"/>
+  ${dog?`<path d="M120 78 q-10 -16 4 -24 q6 14 8 20Z" fill="${furL}"/><path d="M180 78 q10 -16 -4 -24 q-6 14 -8 20Z" fill="${furL}"/>`:''}
+  ${dirty?`<circle cx="106" cy="130" r="11" fill="${furD}" opacity=".55"/><circle cx="198" cy="116" r="9" fill="${furD}" opacity=".55"/>`:''}
+  <circle cx="104" cy="176" r="16" fill="#ff9ec0" opacity=".45"/><circle cx="196" cy="176" r="16" fill="#ff9ec0" opacity=".45"/>
+  <circle cx="120" cy="146" r="16" fill="#fff"/><circle cx="123" cy="148" r="11" fill="url(#${eg})"/><circle cx="123" cy="148" r="5" fill="#120a04"/><circle cx="127" cy="143" r="3.6" fill="#fff"/>
+  <circle cx="180" cy="146" r="16" fill="#fff"/><circle cx="177" cy="148" r="11" fill="url(#${eg})"/><circle cx="177" cy="148" r="5" fill="#120a04"/><circle cx="173" cy="143" r="3.6" fill="#fff"/>
+  <ellipse cx="150" cy="178" rx="30" ry="22" fill="${furL}"/>
+  ${dog
+    ? `<path d="M134 170 C134 162 166 162 166 170 C166 180 134 180 134 170Z" fill="#3a2418"/><ellipse cx="143" cy="168" rx="5" ry="3" fill="#fff" opacity=".5"/>`
+    : `<path d="M140 168 L160 168 L150 178Z" fill="#ff7d9e"/>`}
+  ${dog?'':'<g stroke="#9aa0a6" stroke-width="2.5" opacity=".7"><line x1="120" y1="178" x2="78" y2="170"/><line x1="120" y1="184" x2="80" y2="190"/><line x1="180" y1="178" x2="222" y2="170"/><line x1="180" y1="184" x2="220" y2="190"/></g>'}
+  ${mouth}
+  </svg>`;
+}
+/* =========================================================================
+   ROOM SCENE BACKGROUNDS (drawn)
+   ========================================================================= */
+const SCENE={
+  closet(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="clW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0f7"/><stop offset="1" stop-color="#ffd9ec"/></linearGradient><radialGradient id="clMir" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#eef9ff"/><stop offset="1" stop-color="#bfe2f5"/></radialGradient></defs>
+    <rect width="400" height="600" fill="url(#clW)"/>
+    <g opacity=".22" fill="#fff">${[...Array(8)].map((_,i)=>`<circle cx="${(i*53)%400}" cy="${40+(i*97)%180}" r="${10+(i*13)%14}"/>`).join('')}</g>
+    <rect y="430" width="400" height="170" fill="#f0c9dd"/><rect y="430" width="400" height="14" fill="#e3b3cd"/>
+    <ellipse cx="200" cy="520" rx="150" ry="40" fill="#ffd9ec"/><ellipse cx="200" cy="516" rx="118" ry="30" fill="#ffe7f3"/>
+    <g opacity=".5" stroke="#fff" stroke-width="3"><line x1="0" y1="120" x2="400" y2="120"/><line x1="0" y1="240" x2="400" y2="240"/></g>
+    <g transform="translate(36,150)"><rect width="120" height="270" rx="10" fill="#e9b6cf" stroke="#fff" stroke-width="5"/><line x1="60" y1="10" x2="60" y2="260" stroke="#fff" stroke-width="4"/><circle cx="52" cy="135" r="5" fill="#ffd23f"/><circle cx="68" cy="135" r="5" fill="#ffd23f"/><path d="M14 36 L46 36 M74 36 L106 36" stroke="#fff" stroke-width="3" opacity=".7"/></g>
+    <g transform="translate(250,150)"><ellipse cx="55" cy="80" rx="52" ry="76" fill="url(#clMir)" stroke="#fff" stroke-width="6"/><ellipse cx="40" cy="55" rx="16" ry="26" fill="#fff" opacity=".6"/>
+      <rect x="16" y="160" width="78" height="48" rx="9" fill="#e9b6cf" stroke="#fff" stroke-width="4"/><circle cx="36" cy="184" r="6" fill="#ffd23f"/><rect x="50" y="172" width="32" height="8" rx="4" fill="#fff" opacity=".75"/><rect x="50" y="188" width="24" height="8" rx="4" fill="#ff9ec0"/></g>
+    <g transform="translate(180,40)" opacity=".85">${pennant()}</g></svg>`; },
+  salon(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="saB" cx=".5" cy=".35" r=".9"><stop offset="0" stop-color="#fff3f9"/><stop offset="1" stop-color="#ffd6ea"/></radialGradient></defs>
+    <rect width="400" height="600" fill="url(#saB)"/>
+    <rect y="440" width="400" height="160" fill="#f4c4dd"/>
+    <ellipse cx="200" cy="548" rx="160" ry="34" fill="#eab4d2" opacity=".7"/>
+    <g transform="translate(28,180)"><rect width="72" height="10" rx="5" fill="#e3a8c8"/><rect x="8" y="-26" width="12" height="26" rx="4" fill="#b79cff"/><rect x="28" y="-32" width="12" height="32" rx="4" fill="#5fd6b4"/><rect x="48" y="-22" width="12" height="22" rx="4" fill="#ff8a3d"/></g>
+    <g transform="translate(28,262)"><rect width="72" height="10" rx="5" fill="#e3a8c8"/><circle cx="18" cy="-12" r="11" fill="#ff7db5"/><rect x="38" y="-24" width="14" height="24" rx="5" fill="#6aa6ff"/></g>
+    <g transform="translate(120,150)"><rect x="-10" y="0" width="180" height="150" rx="20" fill="#bfe6ff" stroke="#fff" stroke-width="6"/><ellipse cx="40" cy="46" rx="22" ry="40" fill="#fff" opacity=".5"/>${[...Array(10)].map((_,i)=>`<circle cx="${-10+i*20}" cy="0" r="6" fill="#ffd23f" class="${i%2?'glow':'glow2'}"/>`).join('')}</g>
+    <rect x="70" y="300" width="260" height="14" rx="6" fill="#e3a8c8"/>
+    <g transform="translate(332,212)"><path d="M0 60 C-12 30 -8 8 0 0 C8 8 12 30 0 60Z" fill="#5fd6b4"/><path d="M0 60 C-26 44 -34 22 -28 10 C-12 18 -4 38 0 60Z" fill="#48c9a6"/><path d="M0 60 C26 44 34 22 28 10 C12 18 4 38 0 60Z" fill="#7fe6ca"/><path d="M-14 60 L14 60 L10 96 L-10 96Z" fill="#e08a5a"/></g>
+    <g transform="translate(150,40)">${pennant()}</g></svg>`; },
+  kitchen(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="kW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3e0"/><stop offset="1" stop-color="#ffe1c2"/></linearGradient></defs>
+    <rect width="400" height="600" fill="url(#kW)"/>
+    <g opacity=".35">${[...Array(7)].map((_,r)=>[...Array(9)].map((_,c)=>`<rect x="${c*46-10}" y="${r*46}" width="40" height="40" rx="6" fill="${(r+c)%2?'#fff':'#ffe8cf'}"/>`).join('')).join('')}</g>
+    <g transform="translate(244,92)"><rect x="-8" y="-8" width="132" height="104" rx="12" fill="#fff" stroke="#e8c9a8" stroke-width="5"/><rect width="116" height="88" fill="#bfe9ff"/><circle cx="90" cy="22" r="13" fill="#ffe07a"/><ellipse cx="34" cy="50" rx="18" ry="10" fill="#fff" opacity=".9"/><ellipse cx="52" cy="54" rx="14" ry="8" fill="#fff" opacity=".8"/><line x1="58" y1="0" x2="58" y2="88" stroke="#fff" stroke-width="4"/><line x1="0" y1="44" x2="116" y2="44" stroke="#fff" stroke-width="4"/><path d="M-8 -8 L20 26 L-8 34Z" fill="#ff9ec0" opacity=".9"/><path d="M124 -8 L96 26 L124 34Z" fill="#ff9ec0" opacity=".9"/></g>
+    <rect y="420" width="400" height="180" fill="#d49a6a"/><rect y="408" width="400" height="20" rx="8" fill="#a9763f"/>
+    <g transform="translate(40,300)"><rect width="110" height="120" rx="12" fill="#f3f6fa" stroke="#cbd5e0" stroke-width="4"/><rect x="14" y="14" width="82" height="56" rx="8" fill="#5a4636"/><ellipse cx="55" cy="42" rx="26" ry="18" fill="#ff8a3d" opacity=".6"/><rect x="20" y="84" width="70" height="8" rx="4" fill="#cbd5e0"/></g>
+    <g transform="translate(206,372)"><ellipse cx="40" cy="16" rx="46" ry="13" fill="#fff" stroke="#e3c9a8" stroke-width="3"/><circle cx="20" cy="2" r="11" fill="#ff3b54"/><circle cx="42" cy="-3" r="11" fill="#ffd23f"/><circle cx="60" cy="4" r="11" fill="#5fd6b4"/></g>
+    <g transform="translate(250,40)">${pennant()}</g></svg>`; },
+  pet(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="pSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8ffe9"/><stop offset="1" stop-color="#cdf3ff"/></linearGradient></defs>
+    <rect width="400" height="600" fill="url(#pSky)"/>
+    <rect y="430" width="400" height="170" fill="#bfe9a8"/><path d="M0 430 Q200 405 400 430 L400 460 L0 460Z" fill="#a9dd8e"/>
+    <g transform="translate(330,76)"><circle r="34" fill="#fff3a0"/><circle r="26" fill="#ffe07a"/></g>
+    ${cloud(70,90,'drift')}${cloud(290,140,'drift2')}
+    <g transform="translate(0,392)"><rect width="400" height="12" fill="#d8b277"/>${[...Array(9)].map((_,i)=>`<rect x="${i*46+10}" y="-18" width="9" height="30" fill="#c79a5a"/>`).join('')}</g>
+    <g><ellipse cx="58" cy="452" rx="44" ry="22" fill="#a9dd8e"/><ellipse cx="96" cy="444" rx="32" ry="17" fill="#bfe9a8"/><ellipse cx="350" cy="452" rx="40" ry="20" fill="#a9dd8e"/></g>
+    <g transform="translate(150,360)"><ellipse cx="50" cy="60" rx="58" ry="20" fill="#caa46a" opacity=".5"/><path d="M6 56 Q50 18 94 56 L84 64 L16 64Z" fill="#e0b97a"/><rect x="20" y="56" width="60" height="12" rx="4" fill="#c79a5a"/></g></svg>`; },
+  bath(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="baW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eaf8ff"/><stop offset="1" stop-color="#c8ecff"/></linearGradient></defs>
+    <rect width="400" height="600" fill="url(#baW)"/>
+    <g opacity=".4">${[...Array(9)].map((_,r)=>[...Array(7)].map((_,c)=>`<rect x="${c*60-8}" y="${r*60}" width="54" height="54" rx="8" fill="${(r+c)%2?'#dff2ff':'#fff'}"/>`).join('')).join('')}</g>
+    <g transform="translate(280,120)"><rect x="-6" y="0" width="12" height="40" rx="6" fill="#bcd6e8"/><rect x="-22" y="40" width="44" height="14" rx="7" fill="#9fc4dd"/><circle cx="0" cy="70" r="5" fill="#cdeeff"/><circle cx="14" cy="86" r="4" fill="#cdeeff"/></g>
+    <g transform="translate(308,210)"><rect width="70" height="8" rx="4" fill="#9fc4dd"/><path d="M10 8 L10 64 L34 64 L34 8" fill="#ffb8d8"/><path d="M42 8 L42 52 L62 52 L62 8" fill="#b8e6ff"/></g>
+    <g transform="translate(52,252)"><rect width="92" height="9" rx="4" fill="#9fc4dd"/><rect x="6" y="-18" width="26" height="18" rx="6" fill="#ffb8d8"/><circle cx="48" cy="-9" r="9" fill="#5fd6b4"/><rect x="64" y="-22" width="14" height="22" rx="5" fill="#b79cff"/></g>
+    <ellipse cx="200" cy="548" rx="120" ry="24" fill="#ffd9ec" opacity=".85"/><ellipse cx="200" cy="544" rx="92" ry="17" fill="#ffe7f3"/></svg>`; },
+  garden(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfe9ff"/><stop offset="1" stop-color="#e7f7ff"/></linearGradient><radialGradient id="gSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff6b0"/><stop offset="1" stop-color="#ffd23f"/></radialGradient></defs>
+    <rect width="400" height="600" fill="url(#gSky)"/>
+    <g transform="translate(330,80)"><circle r="46" fill="url(#gSun)"/><g stroke="#ffd23f" stroke-width="6" stroke-linecap="round">${[...Array(12)].map((_,i)=>`<line x1="${Math.cos(i*Math.PI/6)*54}" y1="${Math.sin(i*Math.PI/6)*54}" x2="${Math.cos(i*Math.PI/6)*70}" y2="${Math.sin(i*Math.PI/6)*70}"/>`).join('')}</g></g>
+    ${cloud(80,120,'drift')}${cloud(180,70,'drift2')}
+    <rect y="360" width="400" height="240" fill="#9bd97a"/><path d="M0 360 Q200 335 400 360 L400 390 L0 390Z" fill="#86c965"/>
+    <g stroke="#7ab85a" stroke-width="4">${[...Array(20)].map((_,i)=>`<line x1="${i*22}" y1="600" x2="${i*22+6}" y2="${560-((i*37)%97)/97*30}"/>`).join('')}</g>
+    <g transform="translate(0,360)"><rect width="400" height="14" fill="#d8b277"/>${[...Array(9)].map((_,i)=>`<rect x="${i*46+8}" y="-20" width="10" height="34" fill="#c79a5a"/>`).join('')}</g>
+    <g transform="translate(30,470)">${[0,1,2,3].map(i=>`<g transform="translate(${i*36},${(i%2)*8})"><path d="M0 38 L0 16" stroke="#4bbf86" stroke-width="4"/><circle cx="0" cy="10" r="9" fill="${['#ff7db5','#ffd23f','#b79cff','#ff8a3d'][i]}"/><circle cx="0" cy="10" r="3.5" fill="#fff" opacity=".7"/></g>`).join('')}</g>
+    <g transform="translate(290,500)">${[0,1,2].map(i=>`<g transform="translate(${i*30},${(i%2)*7})"><path d="M0 34 L0 14" stroke="#4bbf86" stroke-width="4"/><circle cx="0" cy="9" r="8" fill="${['#6aa6ff','#ff5fa2','#ffd23f'][i]}"/></g>`).join('')}</g></svg>`; },
+  pool(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="poSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bfeeff"/><stop offset="1" stop-color="#e7f9ff"/></linearGradient><linearGradient id="poW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd0ff"/><stop offset="1" stop-color="#3aa6f0"/></linearGradient></defs>
+    <rect width="400" height="600" fill="url(#poSky)"/>
+    <g transform="translate(60,80)"><circle r="40" fill="#fff3a0"/><circle r="30" fill="#ffe98f"/></g>${cloud(250,110,'drift')}
+    <rect y="220" width="400" height="60" fill="#e8d8c0"/><g opacity=".5">${[...Array(9)].map((_,i)=>`<rect x="${i*46}" y="220" width="2" height="60" fill="#caa46a"/>`).join('')}</g>
+    <g transform="translate(318,176)"><line x1="0" y1="0" x2="0" y2="100" stroke="#caa46a" stroke-width="6"/><path d="M-58 8 C-34 -30 34 -30 58 8 L38 8 C24 -8 -24 -8 -38 8Z" fill="#ff7db5"/><path d="M-58 8 C-34 -30 34 -30 58 8" fill="none" stroke="#fff" stroke-width="3"/><path d="M-38 8 C-24 -8 24 -8 38 8Z" fill="#ffd0e6"/></g>
+    <g transform="translate(46,234)"><rect width="84" height="34" rx="7" fill="#ffd23f" opacity=".95"/><g stroke="#fff" stroke-width="4"><line x1="16" y1="0" x2="16" y2="34"/><line x1="42" y1="0" x2="42" y2="34"/><line x1="68" y1="0" x2="68" y2="34"/></g></g>
+    <rect y="280" width="400" height="320" fill="url(#poW)"/>
+    <g stroke="#fff" stroke-width="3" opacity=".4">${[...Array(6)].map((_,i)=>`<path d="M0 ${320+i*48} Q100 ${308+i*48} 200 ${320+i*48} T400 ${320+i*48}"/>`).join('')}</g>
+    <g transform="translate(86,332)"><circle r="20" fill="#fff"/><path d="M-20 0 A20 20 0 0 0 20 0Z" fill="#ff5fa2"/><path d="M-14 -14 A20 20 0 0 1 14 -14" stroke="#6aa6ff" stroke-width="6" fill="none"/></g>
+    <rect x="340" y="280" width="40" height="200" rx="10" fill="#fff" opacity=".5"/></svg>`; },
+  party(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><radialGradient id="paB" cx=".5" cy=".2" r="1"><stop offset="0" stop-color="#6a3da0"/><stop offset="1" stop-color="#2b1b4d"/></radialGradient></defs>
+    <rect width="400" height="600" fill="url(#paB)"/>
+    <g opacity=".9">${[...Array(40)].map((_,i)=>`<circle cx="${(i*53)%400}" cy="${(i*131)%420}" r="${1+(i*29)%3}" fill="#fff" opacity="${(30+(i*17)%50)/100}"${i%5===0?` class="${i%10?'tw':'tw2'}"`:''}/>`).join('')}</g>
+    <rect y="470" width="400" height="130" fill="#3a2466"/><rect y="460" width="400" height="14" fill="#52327f"/>
+    <g stroke="#ffd23f" stroke-width="2" fill="none" opacity=".7"><path d="M-10 40 Q100 90 200 40 T410 40"/></g>
+    <g stroke="#ff7db5" stroke-width="2" fill="none" opacity=".6"><path d="M-10 64 Q100 116 200 64 T410 64"/></g>
+    ${[40,120,200,280,360].map((x,i)=>`<circle cx="${x}" cy="${56+(i%2)*18}" r="7" fill="${['#ff5fa2','#ffd23f','#5fd6b4','#6aa6ff','#ff8a3d'][i]}"/>`).join('')}
+    <g transform="translate(26,470)">${[0,1,2].map(i=>`<g transform="translate(${i*16},${-(i%2)*14})"><path d="M0 0 C7 0 9 7 9 12 C9 19 4 23 0 23 C-4 23 -9 19 -9 12 C-9 7 -7 0 0 0Z" fill="${['#ff5fa2','#ffd23f','#6aa6ff'][i]}"/><path d="M0 23 C2 28 -2 32 0 36" stroke="#b98" stroke-width="1.5" fill="none"/></g>`).join('')}</g>
+    <g transform="translate(374,470)">${[0,1,2].map(i=>`<g transform="translate(${-i*16},${-(i%2)*14})"><path d="M0 0 C7 0 9 7 9 12 C9 19 4 23 0 23 C-4 23 -9 19 -9 12 C-9 7 -7 0 0 0Z" fill="${['#5fd6b4','#b79cff','#ff8a3d'][i]}"/><path d="M0 23 C2 28 -2 32 0 36" stroke="#b98" stroke-width="1.5" fill="none"/></g>`).join('')}</g></svg>`; }
+};
+/* cls wraps the puffs in an inner group so CSS transform animation never fights the positioning transform */
+function cloud(x,y,cls){ return `<g transform="translate(${x},${y})"><g ${cls?`class="${cls}"`:''} fill="#ffffff" opacity=".85"><ellipse cx="0" cy="0" rx="30" ry="20"/><ellipse cx="26" cy="6" rx="24" ry="16"/><ellipse cx="-24" cy="6" rx="22" ry="15"/></g></g>`; }
+function pennant(){ return `<g>${[0,1,2,3,4].map(i=>`<path d="M${i*36} 0 L${i*36+36} 0 L${i*36+18} 26Z" fill="${['#ff5fa2','#ffd23f','#5fd6b4','#6aa6ff','#ff8a3d'][i]}"/>`).join('')}<path d="M0 0 H180" stroke="#fff" stroke-width="2"/></g>`; }
+/* =========================================================================
+   FX (vector sprites)
+   ========================================================================= */
+function spriteAt(x,y,svg,anim='floatUp',size=34){
+  const el=document.createElement('div'); el.className='fx'; el.innerHTML=svg;
+  el.style.width=size+'px'; el.style.height=size+'px';
+  el.style.left=(x-size/2)+'px'; el.style.top=(y-size/2)+'px';
+  el.style.animation=anim+' 1.1s ease-out forwards';
+  document.body.appendChild(el); setTimeout(()=>el.remove(),1150);
+}
+function hearts(x,y,n=5){ for(let i=0;i<n;i++)setTimeout(()=>spriteAt(x+(Math.random()*60-30),y,ICON.heart(),'floatUp',30),i*90); }
+function sparkles(x,y,n=6){ for(let i=0;i<n;i++)setTimeout(()=>spriteAt(x+(Math.random()*80-40),y+(Math.random()*40-20), i%2?ICON.sparkle():ICON.star(),'pop',26),i*60); }
+function confetti(n=60){
+  const cols=['#ff5fa2','#ffd23f','#5fd6b4','#6aa6ff','#ff8a3d','#b79cff'];
+  for(let i=0;i<n;i++){ const el=document.createElement('div'); el.className='fx';
+    if(i%5===0){ el.innerHTML=ICON.heart(cols[i%cols.length]); el.style.width='22px'; el.style.height='22px'; }
+    else if(i%5===1){ el.innerHTML=ICON.star(cols[i%cols.length]); el.style.width='22px'; el.style.height='22px'; }
+    else { el.style.width=(8+Math.random()*8)+'px'; el.style.height=(12+Math.random()*8)+'px';
+      el.style.background=cols[i%cols.length]; el.style.borderRadius='3px'; }
+    el.style.left=Math.random()*100+'vw'; el.style.top='-40px';
+    el.style.animation=`confettiFall ${1.6+Math.random()*1.4}s linear forwards`; el.style.animationDelay=(Math.random()*.6)+'s';
+    document.body.appendChild(el); setTimeout(()=>el.remove(),3800); }
+}
+function toast(txt){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=txt;
+  t.style.animation='toastPop 1.6s ease forwards'; document.body.appendChild(t);
+  setTimeout(()=>t.remove(),1650);
+}
+/* =========================================================================
+   PALETTES + UI HELPERS
+   ========================================================================= */
+const SKIN=['#fbe0c4','#f3c8a6','#e0a878','#c68642','#8d5524','#5c3a21'];
+const HAIRCOL=['#2b1a12','#6b3b1f','#a9692e','#e0a000','#d94f7a','#7b4fd9','#3aa0ff','#ff6bd1','#e8e8e8'];
+const HAIRSTYLE=[['long','💇‍♀️'],['bob','👧'],['pony','🎀'],['bun','🍡'],['curly','🌀'],['pigtails','🎀'],['braid','🧶']];
+const OUTFIT=[['dress','👗'],['topskirt','👚'],['party','✨'],['swim','🩱'],['pj','🌙'],['gown','👑'],['hero','⚡'],['tutu','🩰']];
+const BRIGHT=['#ff5fa2','#ff3b6b','#ffd23f','#5fd6b4','#b79cff','#3aa0ff','#ff8a3d','#ffffff','#5a3d52','#ff6bd1','#5fc0ff'];
+const LIP=['#e85a7a','#ff3b6b','#c43d6b','#ff8a9e','#b04a8a','#d94f4f'];
+const WALL=['#ffe3f1','#dcefff','#e6ffe9','#fff3d6','#f0e6ff','#ffe0d6'];
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+/* swatch row: items are color strings OR [value, svgMarkup] for icon swatches */
+function swatchRow(items, getSel, onPick, mode){
+  const wrap=el('<div class="swatches"></div>');
+  items.forEach(it=>{
+    const val=Array.isArray(it)?it[0]:it;
+    const s=el('<div class="sw"></div>');
+    if(Array.isArray(it)){ s.innerHTML=it[1]; }
+    else { s.style.background=val; }
+    if(getSel()===val) s.classList.add('sel');
+    s.addEventListener('click',()=>{ S.pop(); onPick(val);
+      if(typeof val==='string'&&val.charAt(0)==='#') sayColor(val);
+      wrap.querySelectorAll('.sw').forEach(x=>x.classList.remove('sel')); s.classList.add('sel'); });
+    wrap.appendChild(s);
+  });
+  return wrap;
+}
+/* mini preview svgs for hair/outfit pickers, drawn so no emoji */
+function hairPreview(style){ const c='#7a4a2b'; const hg=uid('hp'),sg=uid('hps');
+  return `<svg viewBox="64 64 192 184"><defs><linearGradient id="${hg}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${shade(c,30)}"/><stop offset="1" stop-color="${shade(c,-34)}"/></linearGradient><radialGradient id="${sg}" cx=".42" cy=".38" r=".75"><stop offset="0" stop-color="#f6cba6"/><stop offset="1" stop-color="#d6a578"/></radialGradient></defs>${hairBack(style,c)}<path d="M160 92 C120 92 100 124 100 150 C100 184 128 206 160 206 C192 206 220 184 220 150 C220 124 200 92 160 92Z" fill="url(#${sg})"/>${hairFront(style,c,hg)}</svg>`; }
+function outfitPreview(style,c){ const og=uid('op');
+  return `<svg viewBox="52 198 216 226"><defs><linearGradient id="${og}" x1=".2" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="${shade(c,30)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${shade(c,-26)}"/></linearGradient></defs>${outfit(style,c,og)}</svg>`; }
+/* =========================================================================
+   ROOM: CLOSET
+   ========================================================================= */
+function roomCloset(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.closet()}</div><div class="roomname">Dress Up</div>
+      <div class="stagecanvas" id="dollCanvas"></div>
+      <button id="snapBtn" aria-label="take a photo">📸</button>
+      <div class="prop" id="closetProp" style="left:8%;top:2px;width:84%;height:46px;"><svg viewBox="0 0 340 46" preserveAspectRatio="none"><path d="M0 10 Q170 40 340 10" stroke="#fff" stroke-width="3" fill="none" opacity=".75"/>${[30,90,150,210,270,320].map((x,i)=>`<circle cx="${x}" cy="${22+(i%2)*7}" r="6" fill="${['#ffd23f','#ff7db5','#5fd6b4','#b79cff','#ffd23f','#ff8a3d'][i]}" class="${i%2?'glow':'glow2'}"/>`).join('')}</svg></div></div>
+    <div class="tray"><div class="tabrow" id="closetTabs"></div><div id="closetPanel"></div></div></div>`);
+  const canvas=r.querySelector('#dollCanvas');
+  const draw=()=>{ canvas.innerHTML=`<div class="idle">${renderDoll({w:Math.min(240,window.innerWidth*.6)})}</div>`;
+    const rect=canvas.getBoundingClientRect(); sparkles(rect.left+rect.width/2,rect.top+rect.height/3,3); };
+  draw();
+  const snapBtn=r.querySelector('#snapBtn');
+  snapBtn.classList.toggle('off',G.gallery.length>=24);
+  snapBtn.addEventListener('click',()=>{
+    if(G.gallery.length>=24){ S.tap(); say('The fridge is full! Take one down first.'); toast('Fridge full!'); return; }
+    if(!commit(()=>{ G.gallery.push({doll:JSON.parse(JSON.stringify(G.doll)), t:Date.now()}); }))return;
+    const f=document.getElementById('snapFlash'); f.style.display='block'; f.style.animation='flashFade .5s ease forwards';
+    setTimeout(()=>{ f.style.display='none'; f.style.animation=''; },520);
+    S.sparkle(); say('Snap! Look on the fridge!');
+    const nb=document.querySelector('.navbtn[data-id="gallery"]');
+    if(nb){ nb.classList.remove('pulse3'); void nb.offsetWidth; nb.classList.add('pulse3'); }
+    snapBtn.classList.toggle('off',G.gallery.length>=24);
+  });
+  r.querySelector('#closetProp').addEventListener('click',e=>{ S.sparkle(); say('Twinkle twinkle!');
+    sparkles(e.clientX,e.clientY,6); });
+  const tabs=[['Skin','skin'],['Hair','hair'],['Color','haircol'],['Dress','outfit'],['Fabric','outfitcol'],['Shoes','shoes'],['Bling','acc']];
+  const tabrow=r.querySelector('#closetTabs'); const panel=r.querySelector('#closetPanel');
+  let cur='skin';
+  function panelFor(t){
+    panel.innerHTML='';
+    if(t==='skin') panel.appendChild(swatchRow(SKIN,()=>G.doll.skin,v=>{commit(()=>{G.doll.skin=v;})&&draw();}));
+    if(t==='hair') panel.appendChild(swatchRow(HAIRSTYLE.map(h=>[h[0],hairPreview(h[0])]),()=>G.doll.hair,v=>{commit(()=>{G.doll.hair=v;})&&draw();}));
+    if(t==='haircol') panel.appendChild(swatchRow(HAIRCOL,()=>G.doll.hairColor,v=>{commit(()=>{G.doll.hairColor=v;})&&draw();}));
+    if(t==='outfit') panel.appendChild(swatchRow(OUTFIT.map(o=>[o[0],outfitPreview(o[0],'#ff5fa2')]),()=>G.doll.outfit,v=>{if(commit(()=>{G.doll.outfit=v;})){draw();say({dress:'Pretty dress!',topskirt:'Cute outfit!',party:'Party dress!',swim:'Swimsuit!',pj:'Pajamas!',gown:'A princess gown!',hero:'Super hero!',tutu:'A tutu!'}[v]||'');}}));
+    if(t==='outfitcol') panel.appendChild(swatchRow(BRIGHT,()=>G.doll.outfitColor,v=>{commit(()=>{G.doll.outfitColor=v;})&&draw();}));
+    if(t==='shoes') panel.appendChild(swatchRow(BRIGHT,()=>G.doll.shoes,v=>{commit(()=>{G.doll.shoes=v;})&&draw();}));
+    if(t==='acc'){
+      const accs=[['crown',ICON.star('#ffd23f')],['bow',ICON.heart('#ff3b6b')],['glasses',`<svg viewBox="0 0 100 100"><g stroke="#5a3d52" stroke-width="6" fill="none"><circle cx="30" cy="50" r="18"/><circle cx="70" cy="50" r="18"/><line x1="48" y1="50" x2="52" y2="50"/></g></svg>`],['flower',ICON.flower('#ff5fa2')],['necklace',`<svg viewBox="0 0 100 100"><path d="M22 30 Q50 70 78 30" stroke="#ffd23f" stroke-width="6" fill="none"/><circle cx="50" cy="62" r="9" fill="#ff5fa2"/></svg>`],['wand',`<svg viewBox="0 0 100 100"><rect x="44" y="34" width="9" height="54" rx="4.5" transform="rotate(-22 48 60)" fill="#ffb8d8"/><g transform="translate(62,26) scale(.34)"><path d="M0 -30 L9 -7 L33 -5 L14 10 L20 33 L0 19 L-20 33 L-14 10 L-33 -5 L-9 -7Z" fill="#ffd23f" stroke="#e0a800" stroke-width="4"/></g></svg>`],['wings',`<svg viewBox="0 0 100 100"><g opacity=".95"><path d="M46 50 C16 30 4 56 18 76 C28 90 44 82 48 66Z" fill="#dff2ff" stroke="#9fc9e8" stroke-width="3"/><path d="M54 50 C84 30 96 56 82 76 C72 90 56 82 52 66Z" fill="#dff2ff" stroke="#9fc9e8" stroke-width="3"/></g></svg>`]];
+      const wrap=el('<div class="swatches"></div>');
+      accs.forEach(([k,svg])=>{ const s=el(`<div class="sw">${svg}</div>`);
+        if(G.doll.accessories[k])s.classList.add('sel');
+        s.addEventListener('click',()=>{ S.pop(); const nv=!G.doll.accessories[k];
+          if(!commit(()=>{ G.doll.accessories[k]=nv; }))return;
+          if(nv) say({crown:'A crown!',bow:'A bow!',glasses:'Glasses!',flower:'A flower!',necklace:'A necklace!',wand:'A magic wand!',wings:'Fairy wings!'}[k]);
+          s.classList.toggle('sel'); draw(); }); wrap.appendChild(s); });
+      panel.appendChild(wrap);
+    }
+  }
+  tabs.forEach(([label,key])=>{ const b=el(`<button class="tab ${key===cur?'on':''}">${label}</button>`);
+    b.addEventListener('click',()=>{ S.tap(); cur=key; tabrow.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); panelFor(key); }); tabrow.appendChild(b); });
+  panelFor(cur);
+  return r;
+}
+/* =========================================================================
+   ROOM: SALON
+   ========================================================================= */
+function roomSalon(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.salon()}</div><div class="roomname">Beauty Salon</div>
+      <div class="stagecanvas" id="salonCanvas"></div></div>
+    <div class="tray">
+      <div style="text-align:center;font-weight:800;color:var(--pink-deep);">Pick a lip color</div>
+      <div id="lipRow"></div>
+      <div class="btnrow"><button class="bigbtn sun" id="glowBtn">✨ Magic Glow</button>
+        <button class="bigbtn alt" id="hairGemBtn">💎 Hair Gems</button></div></div></div>`);
+  const canvas=r.querySelector('#salonCanvas');
+  const draw=()=>canvas.innerHTML=`<div class="idle">${renderDoll({w:Math.min(240,window.innerWidth*.6)})}</div>`;
+  draw();
+  r.querySelector('#lipRow').appendChild(swatchRow(LIP,()=>G.doll.lip,v=>{commit(()=>{G.doll.lip=v;})&&draw();}));
+  r.querySelector('#glowBtn').addEventListener('click',()=>{ S.sparkle();
+    const b=canvas.getBoundingClientRect(); sparkles(b.left+b.width/2,b.top+b.height/2,10); toast('Gorgeous! ✨'); });
+  r.querySelector('#hairGemBtn').addEventListener('click',()=>{ S.sparkle();
+    if(!commit(()=>{ G.doll.accessories.flower=true; }))return;
+    draw();
+    const b=canvas.getBoundingClientRect(); sparkles(b.left+b.width/2,b.top+b.height/3,8); });
+  return r;
+}
+/* =========================================================================
+   ROOM: KITCHEN
+   ========================================================================= */
+function roomKitchen(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.kitchen()}</div><div class="roomname">Bake a Cake</div>
+      <div class="stagecanvas"><div id="bakeArea" style="text-align:center;"></div></div>
+      <div class="prop" id="kitchenProp" style="left:4%;top:18%;width:118px;height:64px;"><svg viewBox="0 0 118 64"><rect y="50" width="118" height="9" rx="4" fill="#a9763f"/><g><rect x="8" y="14" width="26" height="36" rx="6" fill="#ffe07a" stroke="#d8a544" stroke-width="3"/><rect x="8" y="14" width="26" height="10" rx="5" fill="#d8a544"/><circle cx="21" cy="36" r="5" fill="#b07820"/></g><g><rect x="44" y="8" width="28" height="42" rx="6" fill="#ffb8d8" stroke="#e088b0" stroke-width="3"/><rect x="44" y="8" width="28" height="10" rx="5" fill="#e088b0"/><circle cx="58" cy="32" r="5" fill="#c75d8e"/><circle cx="52" cy="40" r="3" fill="#c75d8e"/></g><g><rect x="82" y="18" width="26" height="32" rx="6" fill="#bfe9a8" stroke="#8cc070" stroke-width="3"/><rect x="82" y="18" width="26" height="9" rx="4" fill="#8cc070"/><circle cx="95" cy="38" r="4" fill="#6da050"/></g></svg></div></div>
+    <div class="tray"><div id="kitchenTray"></div></div></div>`);
+  const area=r.querySelector('#bakeArea'); const tray=r.querySelector('#kitchenTray');
+  r.querySelector('#kitchenProp').addEventListener('click',e=>{ S.pop(); say('Cookies!');
+    const p=r.querySelector('#kitchenProp'); p.style.animation='wiggle .4s ease 2'; setTimeout(()=>p.style.animation='',850);
+    spriteAt(e.clientX,e.clientY,ICON.candy(),'floatUp',30); });
+  let phase='mix', added=[], frosting='#ff5fa2', toppings=[];
+  const INGR=[['egg',ICON.egg()],['milk',ICON.milk()],['flour',ICON.flour()],['cocoa',ICON.cocoa()],['sugar',ICON.sugar()]];
+  const ic=s=>`<span style="display:inline-block;width:34px;height:34px;vertical-align:middle;">${s}</span>`;
+  function bowlSVG(){ return `<svg viewBox="0 0 200 160" width="150"><ellipse cx="100" cy="150" rx="64" ry="10" fill="#5a3d52" opacity=".15"/><path d="M30 70 Q100 64 170 70 L150 130 Q100 148 50 130Z" fill="#eef3f8" stroke="#cbd5e0" stroke-width="4"/><path d="M40 78 Q100 84 160 78 L156 92 Q100 100 44 92Z" fill="#ffe0ad"/><ellipse cx="70" cy="84" rx="10" ry="5" fill="#fff" opacity=".6"/></svg>`; }
+  function cakeSVG(fr,tops){ const lt=shade(fr,30),dk=shade(fr,-20);
+    const tp=tops.map((t,i)=>`<g transform="translate(${60+(i%4)*22},${36+Math.floor(i/4)*18}) scale(.22)">${t.replace(/^<svg[^>]*>|<\/svg>$/g,'')}</g>`).join('');
+    return `<svg viewBox="0 0 200 200" width="170"><ellipse cx="100" cy="186" rx="70" ry="10" fill="#5a3d52" opacity=".15"/>
+      <rect x="36" y="96" width="128" height="74" rx="10" fill="#e8b98a"/><rect x="36" y="96" width="128" height="14" fill="#d8a571"/>
+      <path d="M30 96 Q100 70 170 96 L170 110 Q100 128 30 110Z" fill="${fr}"/>
+      ${[...Array(7)].map((_,i)=>`<path d="M${30+i*23} 104 q6 14 0 22" stroke="${lt}" stroke-width="5" fill="none"/>`).join('')}
+      <rect x="92" y="50" width="16" height="34" rx="3" fill="#ffd23f"/><rect x="92" y="50" width="16" height="6" fill="#fff"/>
+      <path d="M100 38 Q108 48 100 50 Q92 48 100 38Z" fill="#ff8a3d"/>${tp}</svg>`; }
+  function render(){
+    if(phase==='mix'){
+      area.innerHTML=`${bowlSVG()}<div style="font-size:18px;min-height:34px;">${added.map(a=>ic(a[1])).join('')}</div>`;
+      tray.innerHTML=''; const lbl=el('<div style="text-align:center;font-weight:800;">Tap to add, then mix!</div>');
+      const wrap=el('<div class="swatches" style="justify-content:center;"></div>');
+      INGR.forEach(it=>{ const s=el(`<div class="sw">${it[1]}</div>`);
+        s.addEventListener('click',ev=>{ S.pop(); added.push(it); say(it[0]+'!'); spriteAt(ev.clientX,ev.clientY,it[1],'pop',30); render(); });
+        wrap.appendChild(s); });
+      const mixBtn=el('<button class="bigbtn alt">🥄 Mix it!</button>');
+      mixBtn.addEventListener('click',()=>{ if(added.length<2){toast('Add more!');return;}
+        S.sparkle(); say('Mixing!'); const b=area.querySelector('svg'); if(b)b.style.animation='wiggle .5s ease 2'; phase='bake'; setTimeout(render,1000); });
+      tray.appendChild(lbl); tray.appendChild(wrap);
+      const br=el('<div class="btnrow"></div>'); br.appendChild(mixBtn); tray.appendChild(br);
+    } else if(phase==='bake'){
+      area.innerHTML=`<svg viewBox="0 0 200 160" width="150"><rect x="30" y="40" width="140" height="110" rx="14" fill="#f3f6fa" stroke="#cbd5e0" stroke-width="5"/><rect x="44" y="56" width="112" height="66" rx="8" fill="#5a4636"/><ellipse cx="100" cy="92" rx="40" ry="24" fill="#ff8a3d" opacity=".7"/><circle cx="60" cy="138" r="6" fill="#cbd5e0"/></svg>
+        <div style="font-weight:800;font-size:18px;">Baking...</div>
+        <div class="meterbar" style="width:160px;margin:8px auto;"><div class="meterfill" id="bakeBar" style="width:0;"></div></div>`;
+      tray.innerHTML='<div style="text-align:center;font-weight:800;">Smells yummy! 🤤</div>';
+      let p=0; const bar=area.querySelector('#bakeBar');
+      const iv=setInterval(()=>{ p+=10; bar.style.width=p+'%'; S.tap(); if(p>=100){clearInterval(iv); phase='decorate'; S.happy(); render();} },260);
+    } else if(phase==='decorate'){
+      area.innerHTML=cakeSVG(frosting,toppings);
+      tray.innerHTML='';
+      tray.appendChild(el('<div style="text-align:center;font-weight:800;">Frosting color</div>'));
+      tray.appendChild(swatchRow(BRIGHT.slice(0,6),()=>frosting,v=>{frosting=v;render();}));
+      tray.appendChild(el('<div style="text-align:center;font-weight:800;">Toppings</div>'));
+      const tops=[ICON.strawberry(),ICON.cherry(),ICON.rainbow(),ICON.star(),ICON.candy(),ICON.cupcake(),ICON.heart(),ICON.butterfly()];
+      const tw=el('<div class="swatches" style="justify-content:center;"></div>');
+      tops.forEach(svg=>{ const s=el(`<div class="sw">${svg}</div>`);
+        s.addEventListener('click',ev=>{ S.pop(); toppings.push(svg); sayCount(toppings.length); spriteAt(ev.clientX,ev.clientY,svg,'pop',28); render(); }); tw.appendChild(s); });
+      tray.appendChild(tw);
+      const done=el('<div class="btnrow"><button class="bigbtn">😋 Yum! Eat it!</button></div>');
+      done.querySelector('button').addEventListener('click',()=>{ S.yum(); say('Yum yum yum!'); confetti(70); toast('YUM! 😋');
+        added=[]; toppings=[]; phase='mix'; setTimeout(render,1700); });
+      tray.appendChild(done);
+    }
+  }
+  render();
+  return r;
+}
+/* =========================================================================
+   ROOM: PET
+   ========================================================================= */
+const PETNAMES=['Coco','Max','Bella','Luna','Rosie','Buddy','Daisy','Sparkle'];
+function petPropSVG(){
+  return G.pet==='dog'
+    ? `<svg viewBox="0 0 120 110"><path d="M10 50 L60 12 L110 50 L110 100 L10 100Z" fill="#e0b97a" stroke="#c79a5a" stroke-width="4"/><path d="M2 54 L60 8 L118 54 L104 54 L60 20 L16 54Z" fill="#ff7db5"/><rect x="42" y="62" width="36" height="38" rx="16" fill="#7a4a2b"/><circle cx="60" cy="54" r="6" fill="#ffd23f"/></svg>`
+    : `<svg viewBox="0 0 120 110"><ellipse cx="58" cy="102" rx="42" ry="8" fill="#caa46a"/><rect x="51" y="30" width="14" height="70" rx="6" fill="#d8b277"/><ellipse cx="58" cy="28" rx="36" ry="13" fill="#b79cff"/><ellipse cx="58" cy="23" rx="36" ry="11" fill="#caa0e8"/><circle cx="24" cy="62" r="11" fill="#ffd23f"/><line x1="24" y1="40" x2="24" y2="54" stroke="#9a7a4a" stroke-width="2"/></svg>`;
+}
+function roomPet(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.pet()}</div>
+      <div class="roomname"><span id="petNameLabel"></span><button id="petEdit" aria-label="name your pet" style="border:none;background:transparent;font-size:16px;cursor:pointer;padding:0 0 0 6px;">✏️</button></div>
+      <div class="meter">${ICON.heart()}<div class="meterbar"><div class="meterfill" id="hapFill"></div></div></div>
+      <div class="stagecanvas" id="petCanvas"></div>
+      <div class="prop" id="petProp" style="left:3%;bottom:23%;width:112px;height:102px;">${petPropSVG()}</div></div>
+    <div class="tray"><div class="btnrow">
+      <button class="bigbtn" id="feedBtn">🍖 Feed</button>
+      <button class="bigbtn alt" id="playBtnP">🎾 Play</button>
+      <button class="bigbtn sun" id="bathBtn">🛁 Bath</button>
+    </div><div style="text-align:center;font-weight:700;color:var(--ink);">Tap your pet to pet it! 💖</div></div></div>`);
+  const canvas=r.querySelector('#petCanvas'); const fill=r.querySelector('#hapFill');
+  const nameLabel=r.querySelector('#petNameLabel');
+  function paintName(){ nameLabel.textContent=G.petName||'My Pet'; }
+  paintName();
+  const draw=()=>{ canvas.innerHTML=`<div class="idle">${renderPet()}</div>`; fill.style.width=G.petState.happiness+'%';
+    canvas.firstElementChild.addEventListener('click',e=>{ S[G.pet==='dog'?'woof':'meow'](); say(G.pet==='dog'?'Woof woof!':'Meow!'); hearts(e.clientX,e.clientY,4); bump(4); }); };
+  function bump(n){ if(commit(()=>{ G.petState.happiness=Math.min(100,G.petState.happiness+n); })) fill.style.width=G.petState.happiness+'%'; }
+  draw();
+  r.querySelector('#petProp').addEventListener('click',e=>{ S[G.pet==='dog'?'woof':'meow']();
+    say(G.pet==='dog'?'Woof woof!':'Meow!'); hearts(e.clientX,e.clientY,3); });
+  r.querySelector('#petEdit').addEventListener('click',()=>{ S.tap(); openPetNameOvl(paintName); });
+  r.querySelector('#feedBtn').addEventListener('click',e=>{ S.pop(); say('Yummy!'); spriteAt(e.clientX,e.clientY,ICON.bone(),'floatUp',34);
+    const b=canvas.getBoundingClientRect(); hearts(b.left+b.width/2,b.top+b.height/2,3); bump(6); });
+  r.querySelector('#playBtnP').addEventListener('click',()=>{ S[G.pet==='dog'?'woof':'meow'](); say('Fetch!');
+    const b=canvas.getBoundingClientRect(); spriteAt(b.left+b.width/2,b.top+b.height/3,ICON.ball(),'floatUp',38);
+    const c=canvas.firstElementChild; c.classList.remove('idle'); c.classList.add('wiggle'); setTimeout(()=>{c.classList.remove('wiggle');c.classList.add('idle');},900); bump(6); });
+  r.querySelector('#bathBtn').addEventListener('click',()=>{ S.splash();
+    if(!commit(()=>{ G.petState.clean=true; }))return;
+    say('Splish splash!'); draw();
+    const b=canvas.getBoundingClientRect(); for(let i=0;i<8;i++)setTimeout(()=>spriteAt(b.left+b.width/2+(Math.random()*80-40),b.top+b.height/2,ICON.bubble(),'floatUp',26),i*70); });
+  return r;
+}
+/* pet-name picker: speaking chips a pre-reader picks by ear; type-it field is for grown-ups */
+function openPetNameOvl(onChange){
+  const v=document.getElementById('nameOvl'), c=document.getElementById('nameCard');
+  c.innerHTML=`<h2>Name your pet! 💕</h2><div class="chips" id="nameChips"></div>
+    <div class="btnrow"><button class="chip" id="nameDice">🎲 Surprise me</button></div>
+    <div style="font-size:12px;font-weight:700;color:#8a6a7e;">Grown-up typing:</div>
+    <input id="petNameInput" maxlength="14" autocomplete="off" style="font-family:inherit;font-size:18px;font-weight:800;text-align:center;padding:10px 14px;border:3px solid var(--pink);border-radius:16px;background:#fff;color:var(--pink-deep);-webkit-user-select:text;user-select:text;width:200px;">
+    <button class="bigbtn" id="nameDone">Done 🎀</button>`;
+  const chipsEl=c.querySelector('#nameChips');
+  function setName(n){
+    n=(n||'').replace(/[\u0000-\u001F\u007F]/g,'').trim().slice(0,14);
+    if(!n)return;
+    if(commit(()=>{ G.petName=n; })){ onChange&&onChange(); say(n+'!'); }
+    chipsEl.querySelectorAll('.chip').forEach(x=>x.classList.toggle('sel',x.textContent===G.petName));
+  }
+  PETNAMES.forEach(n=>{ const b=el(`<button class="chip ${G.petName===n?'sel':''}">${n}</button>`);
+    b.addEventListener('click',()=>{ S.pop(); setName(n); }); chipsEl.appendChild(b); });
+  c.querySelector('#nameDice').addEventListener('click',()=>{ S.sparkle(); setName(PETNAMES[Math.floor(Math.random()*PETNAMES.length)]); });
+  const inp=c.querySelector('#petNameInput'); inp.value=G.petName||'';
+  inp.addEventListener('change',()=>setName(inp.value));
+  c.querySelector('#nameDone').addEventListener('click',()=>{ S.tap(); v.classList.remove('on'); });
+  v.onclick=e=>{ if(e.target===v)v.classList.remove('on'); };
+  v.classList.add('on'); say("What's your pet's name?");
+}
+/* =========================================================================
+   ROOM: BEDROOM
+   ========================================================================= */
+const STK=[['star',ICON.star()],['heart',ICON.heart()],['rainbow',ICON.rainbow()],['butterfly',ICON.butterfly()],['flower',ICON.flower()],['moon',ICON.moon()]];
+function roomBedroom(){
+  const r=el(`<div class="room">
+    <div class="scene" id="bedScene"><div class="sceneBg" id="bedBg"></div><div class="roomname">Bedroom</div>
+      <div class="stagecanvas" id="bedCanvas"></div></div>
+    <div class="tray">
+      <div class="btnrow"><button class="bigbtn sun" id="dayNight"></button>
+        <button class="bigbtn alt" id="tuckBtn">😴 Tuck in</button></div>
+      <div style="text-align:center;font-weight:800;">Stickers — tap one, then tap the wall!</div>
+      <div id="stkRow"></div>
+      <div style="text-align:center;font-weight:800;">Wallpaper</div>
+      <div id="wallRow"></div></div></div>`);
+  const bg=r.querySelector('#bedBg'); const canvas=r.querySelector('#bedCanvas');
+  let sleeping=false, selStk=null;
+  function bedScene(night,wall){
+    const wallTop=night?shade(wall,-10):'#ffffff';
+    const sky=night?'#1d1640':'#bfe9ff';
+    const stk=(G.bedroom.stickers||[]).map(s=>{
+      const icon=(STK.find(x=>x[0]===s.k)||STK[0])[1].replace(/^<svg[^>]*>|<\/svg>$/g,'');
+      return `<g transform="translate(${s.x-14},${s.y-14}) scale(.28)">${icon}</g>`; }).join('');
+    return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice">
+      <rect width="400" height="600" fill="${night?shade(wall,-30):wall}"/>
+      <rect width="400" height="200" fill="${wallTop}"/>
+      <path d="M0 60 Q200 92 400 60" stroke="#fff" stroke-width="2" fill="none" opacity=".55"/>
+      ${[60,140,220,300,360].map((x,i)=>`<circle cx="${x}" cy="${74+(i%2)*7}" r="5" fill="#ffd23f" class="${i%2?'glow':'glow2'}"/>`).join('')}
+      <rect y="430" width="400" height="170" fill="${shade(wall,-22)}"/><rect y="430" width="400" height="12" fill="${shade(wall,-34)}"/>
+      <ellipse cx="120" cy="520" rx="104" ry="28" fill="${shade(wall,-14)}"/><ellipse cx="120" cy="516" rx="80" ry="20" fill="${shade(wall,-4)}"/>
+      <g transform="translate(250,120)"><rect x="-6" y="-6" width="120" height="120" rx="12" fill="#fff" stroke="${shade(wall,-20)}" stroke-width="6"/><rect width="108" height="108" fill="${sky}"/>
+        ${night?`<circle cx="80" cy="28" r="16" fill="#fff"/><circle cx="72" cy="24" r="14" fill="${sky}"/>${[...Array(6)].map((_,i)=>`<circle cx="${8+(i*37)%96}" cy="${6+(i*53)%96}" r="1.6" fill="#fff" class="${i%2?'tw':'tw2'}"/>`).join('')}`:`<circle cx="84" cy="26" r="18" fill="#ffe07a"/>${cloud(34,60)}`}
+        <line x1="54" y1="0" x2="54" y2="108" stroke="#fff" stroke-width="4"/><line x1="0" y1="54" x2="108" y2="54" stroke="#fff" stroke-width="4"/></g>
+      <g transform="translate(296,330)"><rect width="84" height="10" rx="5" fill="${shade(wall,-26)}"/><circle cx="16" cy="-10" r="10" fill="#ffd23f"/><rect x="34" y="-20" width="16" height="20" rx="4" fill="#5fd6b4"/><path d="M62 0 L70 -18 L78 0Z" fill="#ff7db5"/></g>
+      <g transform="translate(40,360)"><rect x="-10" y="40" width="180" height="80" rx="10" fill="#b79cff"/><rect x="-10" y="20" width="50" height="40" rx="8" fill="#fff"/><rect x="-10" y="50" width="180" height="30" rx="8" fill="#ff9ec0"/><circle cx="120" cy="44" r="12" fill="#ffd23f"/><path d="M112 40 L120 28 L128 40" stroke="#e0a800" stroke-width="3" fill="none"/></g>
+      <g id="stickerLayer">${stk}</g>
+    </svg>`;
+  }
+  function paint(){
+    const night=G.bedroom.time==='night';
+    bg.innerHTML=bedScene(night,G.bedroom.wall);
+    canvas.innerHTML=`<div class="${sleeping?'':'idle'}">${renderDoll({sleeping, w:Math.min(220,window.innerWidth*.55)})}</div>`;
+    r.querySelector('#dayNight').textContent= night?'☀️ Day':'🌙 Night';
+  }
+  paint();
+  r.querySelector('#dayNight').addEventListener('click',()=>{ if(!commit(()=>{ G.bedroom.time=G.bedroom.time==='night'?'day':'night'; }))return;
+    S.tap(); paint(); say(G.bedroom.time==='night'?'Good night!':'Good morning!'); });
+  r.querySelector('#tuckBtn').addEventListener('click',()=>{ sleeping=!sleeping;
+    if(sleeping){ S.sparkle(); commit(()=>{ G.bedroom.time='night'; }); say('Sweet dreams!'); } paint(); });
+  r.querySelector('#wallRow').appendChild(swatchRow(WALL,()=>G.bedroom.wall,v=>{commit(()=>{G.bedroom.wall=v;})&&paint();}));
+  /* sticker shelf — tap a sticker (speaks), then tap the wall; same swatch cancels */
+  const stkWrap=el('<div class="swatches" style="justify-content:center;"></div>');
+  function deselect(){ selStk=null; stkWrap.querySelectorAll('.sw').forEach(x=>x.classList.remove('sel')); }
+  STK.forEach(([k,svg])=>{ const s=el(`<div class="sw">${svg}</div>`);
+    s.addEventListener('click',()=>{ if(selStk===k){ S.tap(); deselect(); say('Okay!'); }
+      else { S.pop(); deselect(); selStk=k; s.classList.add('sel'); say('Now tap the wall!'); } });
+    stkWrap.appendChild(s); });
+  r.querySelector('#stkRow').appendChild(stkWrap);
+  /* ONE delegated capture handler on the scene — stickers live inside the bg SVG under the
+     full-bleed stagecanvas, so taps are mapped through getScreenCTM, never wired per-sticker */
+  const sceneEl=r.querySelector('#bedScene');
+  sceneEl.addEventListener('click',ev=>{
+    if(ev.target.closest('.roomname')){ if(selStk) say('Put it on the wall!'); return; }
+    if(ev.target.closest('#bedCanvas svg')){ if(selStk) say('Put it on the wall!'); return; }
+    const svg=bg.querySelector('svg'); if(!svg)return;
+    let pt; try{ pt=new DOMPoint(ev.clientX,ev.clientY).matrixTransform(svg.getScreenCTM().inverse()); }catch(e){ return; }
+    if(selStk){
+      if(pt.x<10||pt.x>390||pt.y<90||pt.y>430){ say('Put it on the wall!'); return; }
+      if(G.bedroom.stickers.length>=20){ say('The wall is full! Pop one first.'); deselect(); return; }
+      const k=selStk;
+      if(commit(()=>{ G.bedroom.stickers.push({k:k,x:Math.round(pt.x),y:Math.round(pt.y)}); })){
+        S.pop(); paint(); spriteAt(ev.clientX,ev.clientY,ICON.sparkle(),'pop',24); }
+    } else {
+      let bi=-1,bd=1e9;
+      G.bedroom.stickers.forEach((s,i)=>{ const d=Math.hypot(s.x-pt.x,s.y-pt.y); if(d<bd){bd=d;bi=i;} });
+      if(bi>=0&&bd<=28){
+        if(commit(()=>{ G.bedroom.stickers.splice(bi,1); })){
+          S.pop(); say('Pop!'); paint(); spriteAt(ev.clientX,ev.clientY,ICON.sparkle(),'pop',24); } }
+    }
+  },true);
+  return r;
+}
+/* =========================================================================
+   ROOM: GALLERY — the fridge (snap photos in the closet, they stick here)
+   ========================================================================= */
+/* Stored doll state is re-validated before render: localStorage is user-writable, so every
+   value is whitelisted (hex colors, registry-known styles, boolean accessories) — renderDoll
+   then only ever interpolates values the game itself could have produced. */
+function cleanDoll(d){
+  d=(d&&typeof d==='object')?d:{};
+  const hex=v=>(typeof v==='string'&&/^#[0-9a-fA-F]{3,8}$/.test(v));
+  const out={};
+  out.skin=hex(d.skin)?d.skin:DEFAULT.doll.skin;
+  out.hairColor=hex(d.hairColor)?d.hairColor:DEFAULT.doll.hairColor;
+  out.outfitColor=hex(d.outfitColor)?d.outfitColor:DEFAULT.doll.outfitColor;
+  out.shoes=hex(d.shoes)?d.shoes:DEFAULT.doll.shoes;
+  out.lip=hex(d.lip)?d.lip:DEFAULT.doll.lip;
+  out.hair=HAIRSTYLE.some(h=>h[0]===d.hair)?d.hair:DEFAULT.doll.hair;
+  out.outfit=OUTFIT.some(o=>o[0]===d.outfit)?d.outfit:DEFAULT.doll.outfit;
+  out.accessories={}; const acc=(d.accessories&&typeof d.accessories==='object')?d.accessories:{};
+  Object.keys(DEFAULT.doll.accessories).forEach(k=>out.accessories[k]=!!acc[k]);
+  return out;
+}
+function sceneGallery(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="gaW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6ec"/><stop offset="1" stop-color="#ffe2cf"/></linearGradient><linearGradient id="gaF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef7ff"/><stop offset="1" stop-color="#cfe6f5"/></linearGradient></defs>
+  <rect width="400" height="600" fill="url(#gaW)"/>
+  <rect y="470" width="400" height="130" fill="#d49a6a"/><rect y="458" width="400" height="16" rx="7" fill="#a9763f"/>
+  <rect x="36" y="36" width="328" height="436" rx="26" fill="url(#gaF)" stroke="#9fc9e8" stroke-width="6"/>
+  <rect x="36" y="36" width="328" height="436" rx="26" fill="none" stroke="#fff" stroke-width="2" opacity=".6"/>
+  <rect x="322" y="118" width="14" height="92" rx="7" fill="#9fc9e8"/>
+  <circle cx="84" cy="70" r="9" fill="#ff5fa2"/><circle cx="118" cy="64" r="7" fill="#ffd23f"/><circle cx="318" cy="70" r="8" fill="#5fd6b4"/></svg>`; }
+function roomGallery(){
+  const r=el(`<div class="room"><div class="scene"><div class="sceneBg">${sceneGallery()}</div><div class="roomname">My Fridge</div>
+      <div class="polagrid" id="polaGrid"></div></div>
+    <div class="tray"><div style="text-align:center;font-weight:800;color:var(--pink-deep);">📸 Snap photos in Dress Up — they stick here!</div></div></div>`);
+  const grid=r.querySelector('#polaGrid');
+  let armed=false, armT=null;
+  function openBig(i){
+    const v=document.getElementById('bigView'), c=document.getElementById('bigViewCard');
+    armed=false;
+    c.innerHTML=`<h2>You made this! 💖</h2><div>${renderDoll({w:200, doll:cleanDoll(G.gallery[i].doll)})}</div>
+      <div class="btnrow"><button class="chip" id="bvClose">Back 🎀</button><button class="chip plain" id="bvDel" aria-label="take down">🗑</button></div>`;
+    say('You made this!'); sparkles(window.innerWidth/2, window.innerHeight/3, 6);
+    v.classList.add('on');
+    c.querySelector('#bvClose').addEventListener('click',()=>{ S.tap(); v.classList.remove('on'); });
+    c.querySelector('#bvDel').addEventListener('click',()=>{
+      if(!armed){ armed=true; say('Take this photo down? Tap again.'); clearTimeout(armT); armT=setTimeout(()=>{armed=false;},3000); return; }
+      clearTimeout(armT);
+      if(commit(()=>{ G.gallery.splice(i,1); })){ S.pop(); say('Pop!'); }
+      v.classList.remove('on'); paint();
+    });
+    v.onclick=(e)=>{ if(e.target===v)v.classList.remove('on'); };
+  }
+  function paint(){
+    grid.innerHTML='';
+    if(!G.gallery.length){
+      grid.appendChild(el(`<div style="margin-top:22vh;font-weight:800;font-size:18px;color:var(--pink-deep);background:#ffffffcc;padding:14px 22px;border-radius:22px;">No photos yet! 📸</div>`));
+      return;
+    }
+    G.gallery.forEach((p,i)=>{ const c=el(`<div class="polaroid">${renderDoll({w:84, doll:cleanDoll(p.doll)})}</div>`);
+      c.addEventListener('click',()=>{ S.pop(); openBig(i); }); grid.appendChild(c); });
+  }
+  paint();
+  return r;
+}
+/* =========================================================================
+   ROOM: BATHROOM
+   ========================================================================= */
+function roomBath(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.bath()}</div><div class="roomname">Bubble Bath</div>
+      <div class="stagecanvas"><div id="tub" style="position:relative;width:min(86vw,420px);height:60%;
+        background:linear-gradient(#ffffff,#eef7ff);border-radius:0 0 44px 44px;border:8px solid #fff;box-shadow:0 12px 28px var(--shadow);overflow:hidden;">
+        <div style="position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(#a6dcff,#5fc0ff);"></div>
+        <div style="position:absolute;bottom:50%;left:0;right:0;height:8px;background:#fff;opacity:.5;border-radius:50%;"></div>
+        <div id="duck" style="position:absolute;bottom:44%;left:40%;width:64px;height:64px;cursor:pointer;">${ICON.duck()}</div>
+        <div id="bubbleLayer" style="position:absolute;inset:0;"></div>
+      </div></div>
+      <div class="prop" id="bathProp" style="left:5%;top:9%;width:118px;height:100px;"><svg viewBox="0 0 120 100"><rect x="4" y="10" width="112" height="86" rx="12" fill="#fff" stroke="#bcd6e8" stroke-width="5"/><rect x="12" y="18" width="96" height="70" fill="#cdeaff"/><g transform="translate(38,72)"><g class="steam"><path d="M0 0 C-6 -10 6 -16 0 -28" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/></g></g><g transform="translate(68,76)"><g class="steam2"><path d="M0 0 C-6 -10 6 -16 0 -28" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/></g></g><line x1="60" y1="18" x2="60" y2="88" stroke="#fff" stroke-width="4"/><line x1="12" y1="52" x2="108" y2="52" stroke="#fff" stroke-width="4"/></svg></div></div>
+    <div class="tray"><div class="btnrow">
+      <button class="bigbtn" id="bubbleBtn">🫧 More Bubbles!</button>
+      <button class="bigbtn alt" id="drainBtn">🌀 Drain</button></div>
+      <div style="text-align:center;font-weight:700;">Tap bubbles to pop them, tap the duck to squeak!</div></div></div>`);
+  const layer=r.querySelector('#bubbleLayer');
+  r.querySelector('#bathProp').addEventListener('click',e=>{ S.splash(); say('Whoosh!');
+    for(let i=0;i<4;i++)setTimeout(()=>spriteAt(e.clientX+(Math.random()*50-25),e.clientY,ICON.droplet(),'floatUp',24),i*80); });
+  function addBubbles(n){ for(let i=0;i<n;i++){ const b=document.createElement('div');
+    const sz=24+Math.random()*44; b.innerHTML=ICON.bubble(); b.style.position='absolute'; b.style.width=sz+'px'; b.style.height=sz+'px';
+    b.style.left=Math.random()*82+'%'; b.style.bottom=(20+Math.random()*55)+'%'; b.style.cursor='pointer';
+    b.style.animation='bounceIn .4s ease'; b.addEventListener('click',ev=>{ ev.stopPropagation(); S.pop(); spriteAt(ev.clientX,ev.clientY,ICON.sparkle(),'pop',24); b.remove(); });
+    layer.appendChild(b); } }
+  r.querySelector('#bubbleBtn').addEventListener('click',()=>{ S.splash(); say('Bubbles!'); addBubbles(8); });
+  r.querySelector('#drainBtn').addEventListener('click',()=>{ S.splash(); layer.innerHTML=''; });
+  r.querySelector('#duck').addEventListener('click',e=>{ S.squeak(); say('Squeak!'); const d=r.querySelector('#duck'); d.style.animation='wiggle .4s'; setTimeout(()=>d.style.animation='',420); spriteAt(e.clientX,e.clientY,ICON.star('#ffd23f'),'floatUp',24); });
+  setTimeout(()=>addBubbles(6),200);
+  return r;
+}
+/* =========================================================================
+   ROOM: GARDEN
+   ========================================================================= */
+function roomGarden(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.garden()}</div><div class="roomname">Garden</div>
+      <div class="stagecanvas" style="align-items:flex-end;padding-bottom:8%;">
+        <div id="pots" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;"></div></div>
+      <div class="prop" id="gardenProp" style="right:7%;top:44%;width:58px;height:58px;">${ICON.butterfly('#b79cff')}</div></div>
+    <div class="tray"><div class="btnrow"><button class="bigbtn alt" id="waterAll">💧 Water them all!</button></div>
+      <div style="text-align:center;font-weight:700;">Tap a pot to grow a flower! 🌱</div></div></div>`);
+  const pots=r.querySelector('#pots'); const FCOL=['#ff5fa2','#ff7db5','#ffd23f','#b79cff','#6aa6ff','#ff8a3d'];
+  function potSVG(bloom,i){ const flower= bloom? `<g transform="translate(50,8) scale(.42)">${(i%2?ICON.tulip(FCOL[i%FCOL.length]):ICON.flower(FCOL[i%FCOL.length])).replace(/^<svg[^>]*>|<\/svg>$/g,'')}</g>` : `<g><rect x="46" y="40" width="8" height="40" rx="4" fill="#4bbf86"/><path d="M50 56 q-16 -6 -20 6 q14 4 20 -6Z" fill="#5fd6b4"/></g>`;
+    return `<svg viewBox="0 0 100 130" width="70">${flower}<path d="M28 84 L72 84 L66 120 L34 120Z" fill="#e08a5a"/><rect x="26" y="80" width="48" height="10" rx="4" fill="#c97a4a"/><ellipse cx="50" cy="84" rx="22" ry="5" fill="#7a4a2b"/></svg>`; }
+  function paint(){ pots.innerHTML='';
+    G.garden.forEach((bloom,i)=>{ const p=el(`<div style="cursor:pointer;">${potSVG(bloom,i)}</div>`);
+      p.addEventListener('click',e=>{ if(!G.garden[i]){ if(!commit(()=>{ G.garden[i]=true; }))return;
+          S.sparkle(); paint(); say('A flower!');
+          spriteAt(e.clientX,e.clientY,ICON.droplet(),'floatUp',30); setTimeout(()=>spriteAt(e.clientX,e.clientY-20,ICON.butterfly(),'floatUp',32),400); }
+        else { S.pop(); say('Butterfly!'); spriteAt(e.clientX,e.clientY,ICON.butterfly(FCOL[i%FCOL.length]),'floatUp',32); } });
+      pots.appendChild(p); });
+  }
+  paint();
+  r.querySelector('#waterAll').addEventListener('click',()=>{ if(!commit(()=>{ G.garden=G.garden.map(()=>true); }))return;
+    S.sparkle(); paint();
+    for(let i=0;i<6;i++)setTimeout(()=>spriteAt(Math.random()*window.innerWidth, window.innerHeight*0.42, ICON.butterfly(FCOL[i%FCOL.length]),'floatUp',32),i*150); });
+  r.querySelector('#gardenProp').addEventListener('click',e=>{ S.pop(); say('Butterfly!');
+    spriteAt(e.clientX,e.clientY,ICON.butterfly('#b79cff'),'floatUp',36);
+    setTimeout(()=>spriteAt(e.clientX+24,e.clientY-26,ICON.butterfly('#ff7db5'),'floatUp',30),220); });
+  return r;
+}
+/* =========================================================================
+   ROOM: POOL
+   ========================================================================= */
+function roomPool(){
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.pool()}</div><div class="roomname">Pool Party</div>
+      <div class="stagecanvas" id="poolCanvas"></div>
+      <div id="splashZone" style="position:absolute;bottom:0;left:0;right:0;height:55%;"></div>
+      <div class="prop" id="poolProp" style="left:2%;top:14%;width:104px;height:150px;"><svg viewBox="0 0 104 150"><path d="M50 56 C46 90 48 122 52 148 L64 148 C60 120 58 92 62 58Z" fill="#c79a5a"/><path d="M56 54 C20 44 8 22 14 10 C34 18 50 34 58 50Z" fill="#48c9a6"/><path d="M56 54 C92 44 104 22 98 10 C78 18 62 34 54 50Z" fill="#5fd6b4"/><path d="M56 52 C48 24 32 12 18 12 C30 30 44 44 54 54Z" fill="#7fe6ca"/><path d="M56 52 C64 24 80 12 94 12 C82 30 68 44 58 54Z" fill="#3fae8c"/><circle cx="48" cy="58" r="6" fill="#ffd23f"/><circle cx="62" cy="60" r="5" fill="#ff8a3d"/></svg></div>
+    <div class="tray"><div style="text-align:center;font-weight:800;">Floatie color</div>
+      <div id="floatRow"></div>
+      <div style="text-align:center;font-weight:700;">Tap the water to make a big splash! 💦</div></div></div>`);
+  const canvas=r.querySelector('#poolCanvas'); let floatie='#ff5fa2';
+  function floatieSVG(c){ return `<svg viewBox="0 0 200 160" width="200"><ellipse cx="100" cy="150" rx="80" ry="10" fill="#1c6fa6" opacity=".25"/><circle cx="100" cy="100" r="70" fill="${c}"/><circle cx="100" cy="100" r="34" fill="#bfeeff"/><g fill="#fff">${[0,90,180,270].map(a=>`<path d="M100 40 L116 56 L100 56Z" transform="rotate(${a} 100 100)"/>`).join('')}</g><ellipse cx="76" cy="78" rx="14" ry="8" fill="#fff" opacity=".5"/></svg>`; }
+  function draw(){ canvas.innerHTML=`<div style="text-align:center;position:relative;"><div class="idle" style="position:relative;">${floatieSVG(floatie)}<div style="position:absolute;top:-58px;left:50%;transform:translateX(-50%);">${renderDoll({w:120})}</div></div></div>`; }
+  draw();
+  r.querySelector('#floatRow').appendChild(swatchRow(BRIGHT.slice(0,6),()=>floatie,v=>{floatie=v;draw();}));
+  r.querySelector('#splashZone').addEventListener('click',e=>{ S.splash(); say('Splash!');
+    for(let i=0;i<5;i++)setTimeout(()=>spriteAt(e.clientX+(Math.random()*70-35),e.clientY,ICON.droplet(),'floatUp',30),i*60); });
+  r.querySelector('#poolProp').addEventListener('click',e=>{ S.splash(); say('Splash splash!');
+    const p=r.querySelector('#poolProp'); p.style.animation='wiggle .5s ease 2'; setTimeout(()=>p.style.animation='',1100);
+    for(let i=0;i<4;i++)setTimeout(()=>spriteAt(e.clientX+(Math.random()*60-30),e.clientY+30,ICON.droplet(),'floatUp',26),i*80); });
+  return r;
+}
+/* =========================================================================
+   ROOM: PARTY
+   ========================================================================= */
+function roomParty(){
+  const r=el(`<div class="room">
+    <div class="scene" id="partyScene"><div class="sceneBg" id="partyBg">${SCENE.party()}</div><div class="roomname">Party Time</div>
+      <div class="stagecanvas" id="partyCanvas"></div>
+      <div class="prop" id="partyProp" style="left:calc(50% - 36px);top:34px;width:72px;height:80px;">${ICON.discoball()}</div></div>
+    <div class="tray"><div class="btnrow">
+      <button class="bigbtn" id="balloonBtn">🎈 Balloons</button>
+      <button class="bigbtn sun" id="danceBtn">💃 Dance!</button>
+      <button class="bigbtn alt" id="confettiBtn">🎊 Confetti</button></div></div></div>`);
+  const canvas=r.querySelector('#partyCanvas'); const scene=r.querySelector('#partyScene'); const bg=r.querySelector('#partyBg');
+  canvas.innerHTML=`<div class="idle">${renderDoll({w:Math.min(220,window.innerWidth*.55)})}</div>`;
+  const BCOL=['#ff5fa2','#ffd23f','#5fd6b4','#6aa6ff','#ff8a3d','#b79cff'];
+  r.querySelector('#balloonBtn').addEventListener('click',()=>{ S.pop(); say('Balloons!');
+    for(let i=0;i<6;i++)setTimeout(()=>spriteAt(Math.random()*window.innerWidth, window.innerHeight*.6, ICON.balloon(BCOL[i%BCOL.length]),'floatUp',44),i*120); });
+  r.querySelector('#confettiBtn').addEventListener('click',()=>{ S.happy(); say('Hooray!'); confetti(70); });
+  r.querySelector('#partyProp').addEventListener('click',e=>{ S.party(); say('Disco!');
+    const svgEl=bg.querySelector('svg'); if(svgEl){ svgEl.style.animation='discoFlash .9s ease'; setTimeout(()=>svgEl.style.animation='',950); }
+    sparkles(e.clientX,e.clientY,8); });
+  let dancing=false, discoIv=null;
+  r.querySelector('#danceBtn').addEventListener('click',()=>{
+    dancing=!dancing; const doll=canvas.firstElementChild;
+    if(dancing){ S.party(); say('Dance dance dance!'); doll.classList.remove('idle'); doll.classList.add('wiggle'); toast('Dance! 💃');
+      discoIv=setInterval(()=>{ scene.style.background=BCOL[Math.floor(Math.random()*BCOL.length)]; },200);
+      setTimeout(()=>{ if(discoIv){clearInterval(discoIv); discoIv=null;} doll.classList.remove('wiggle'); doll.classList.add('idle'); dancing=false;
+        scene.style.background=''; },4000);
+    }
+  });
+  return r;
+}
+/* =========================================================================
+   ROOM: HOME — the dollhouse. The whole game opens on HER house.
+   Rendered with preserveAspectRatio="meet" (this scene ONLY) so the mansion is
+   never cropped in any orientation; the scene div behind paints matching sky.
+   All toys are drawn IN the SVG; one delegated handler maps taps via CTM and
+   hit-tests TOYS first, ROOMS second, and answers every miss with a sparkle.
+   ========================================================================= */
+function sceneHome(night){
+  const skyTop=night?'#1d1640':'#bfe9ff', skyBot=night?'#2b2356':'#e7f7ff';
+  const wall='#ffd9ec', wallD='#f0b8d4', roof='#ff5fa2', roofD='#e63d86', frame='#fff';
+  const winBg=night?'#ffe9b8':'#cdeaff';
+  const winGlow=night?' class="glow"':'';
+  const petInner=renderPet().replace(/^<svg[^>]*>|<\/svg>$/g,'');
+  const houseSVG=G.pet==='dog'
+    ? `<path d="M0 30 L34 6 L68 30 L68 64 L0 64Z" fill="#e0b97a" stroke="#c79a5a" stroke-width="3"/><path d="M-4 32 L34 3 L72 32 L64 32 L34 11 L4 32Z" fill="#ff7db5"/><rect x="22" y="38" width="24" height="26" rx="11" fill="#7a4a2b"/>`
+    : `<rect x="28" y="14" width="9" height="50" rx="4" fill="#d8b277"/><ellipse cx="32" cy="64" rx="26" ry="5" fill="#caa46a"/><ellipse cx="32" cy="13" rx="22" ry="8" fill="#b79cff"/><circle cx="12" cy="36" r="7" fill="#ffd23f"/>`;
+  const vign={
+    bedroom:`<rect x="14" y="56" width="64" height="22" rx="6" fill="#b79cff"/><rect x="14" y="46" width="22" height="16" rx="5" fill="#fff"/><rect x="14" y="62" width="64" height="9" rx="4" fill="#ff9ec0"/>`,
+    bath:`<rect x="16" y="58" width="60" height="20" rx="10" fill="#cdeeff" stroke="#9fc4dd" stroke-width="2"/><circle cx="30" cy="50" r="5" fill="#fff" opacity=".8"/><circle cx="40" cy="44" r="4" fill="#fff" opacity=".7"/>`,
+    closet:`<path d="M46 38 C40 38 38 43 38 46 L34 70 L58 70 L54 46 C54 43 52 38 46 38Z" fill="#ff5fa2"/><circle cx="46" cy="36" r="4" fill="#ffd23f"/><path d="M38 46 L54 46" stroke="#fff" stroke-width="2"/>`,
+    salon:`<ellipse cx="46" cy="52" rx="16" ry="22" fill="#cdeeff" stroke="#ff7db5" stroke-width="3"/><ellipse cx="41" cy="45" rx="5" ry="8" fill="#fff" opacity=".7"/><rect x="42" y="74" width="8" height="6" fill="#ff7db5"/>`,
+    kitchen:`<path d="M28 56 C28 46 64 46 64 56Z" fill="#ff7db5"/><rect x="26" y="56" width="40" height="18" rx="4" fill="#ffd23f"/><circle cx="46" cy="44" r="4" fill="#ff3b54"/>`,
+    party:`<circle cx="32" cy="48" r="9" fill="#ff5fa2"/><circle cx="50" cy="42" r="9" fill="#5fd6b4"/><circle cx="64" cy="52" r="8" fill="#6aa6ff"/><path d="M32 57 L32 74 M50 51 L50 74 M64 60 L64 74" stroke="#b98" stroke-width="2" fill="none"/>`
+  };
+  const win=(x,y,id,fl)=>`<g transform="translate(${x},${y})"><rect x="0" y="0" width="92" height="88" rx="10" fill="${winBg}"${night?` class="glow winF${fl}"`:` class="winF${fl}"`}/><g opacity=".95">${vign[id]}</g><rect x="0" y="0" width="92" height="88" rx="10" fill="none" stroke="${frame}" stroke-width="5"/></g>`;
+  const atticPhotos=G.gallery.length?`<g transform="translate(178,86)"><rect width="14" height="16" rx="2" fill="#fff" transform="rotate(-8)"/><rect x="16" y="2" width="14" height="16" rx="2" fill="#fff" transform="rotate(6 23 10)"/><circle cx="7" cy="7" r="4" fill="#ff7db5"/><circle cx="24" cy="10" r="4" fill="#b79cff"/></g>`:'';
+  return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid meet"><defs>
+    <linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${skyTop}"/><stop offset="1" stop-color="${skyBot}"/></linearGradient>
+    <linearGradient id="hRoof" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(roof,25)}"/><stop offset="1" stop-color="${roofD}"/></linearGradient>
+    <linearGradient id="hWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe7f3"/><stop offset="1" stop-color="${wallD}"/></linearGradient></defs>
+  <rect width="400" height="480" fill="url(#hSky)"/>
+  <rect y="480" width="400" height="120" fill="${night?'#1f3322':'#9bd97a'}"/><path d="M0 480 Q200 462 400 480 L400 500 L0 500Z" fill="${night?'#2a4230':'#86c965'}"/>
+  ${night
+    ? `<g transform="translate(60,58)"><circle r="22" fill="#fff7d6"/><circle cx="-7" cy="-4" r="19" fill="${skyTop}"/></g>${[...Array(6)].map((_,i)=>`<circle cx="${20+(i*67)%360}" cy="${14+(i*43)%96}" r="1.8" fill="#fff" class="${i%2?'tw':'tw2'}"/>`).join('')}`
+    : `<g transform="translate(60,58)"><circle r="24" fill="#fff3a0"/><circle r="17" fill="#ffe07a"/></g>${cloud(300,72,'drift')}
+       <g transform="translate(262,52)"><rect width="18" height="42" rx="4" fill="#e08aa8"/><rect x="-3" y="-6" width="24" height="10" rx="4" fill="#d4789a"/><g transform="translate(9,-12)"><g class="steam"><circle r="6" fill="#fff" opacity=".8"/></g></g><g transform="translate(13,-26)"><g class="steam2"><circle r="5" fill="#fff" opacity=".7"/></g></g></g>`}
+  <rect x="40" y="130" width="320" height="350" rx="10" fill="url(#hWall)" stroke="#fff" stroke-width="5"/>
+  <path d="M28 134 L200 48 L372 134 Z" fill="url(#hRoof)" stroke="${roofD}" stroke-width="5" stroke-linejoin="round"/>
+  ${[...Array(8)].map((_,i)=>`<circle cx="${66+i*38}" cy="133" r="9" fill="${roofD}"/>`).join('')}
+  <g transform="translate(200,100)"><path d="M0 18 c-9 -16 -34 -10 -34 6 c0 14 22 26 34 34 c12 -8 34 -20 34 -34 c0 -16 -25 -22 -34 -6Z" fill="#fff" stroke="#ffd0e6" stroke-width="3"/><path d="M0 18 c-6 -11 -22 -7 -22 4 c0 9 14 17 22 23 c8 -6 22 -14 22 -23 c0 -11 -16 -15 -22 -4Z" fill="${winBg}"${winGlow}/></g>
+  ${atticPhotos}
+  <g stroke="#fff" stroke-width="4" opacity=".7"><line x1="44" y1="250" x2="300" y2="250"/><line x1="44" y1="365" x2="300" y2="365"/></g>
+  ${win(58,148,'bedroom',3)}${win(192,148,'bath',3)}
+  ${win(58,262,'closet',2)}${win(192,262,'salon',2)}
+  ${win(58,377,'kitchen',1)}${win(192,377,'party',1)}
+  <g transform="translate(305,140)"><rect width="48" height="338" rx="8" fill="#e8b6cf" stroke="#fff" stroke-width="4"/><g stroke="#d49ab8" stroke-width="2">${[...Array(3)].map((_,i)=>`<line x1="4" y1="${112+i*113}" x2="44" y2="${112+i*113}"/>`).join('')}</g>
+    <g transform="translate(4,268)"><g id="elevCar" style="transition:transform .9s ease;"><rect width="40" height="64" rx="6" fill="#ffd23f" stroke="#e0a800" stroke-width="3"/><line x1="20" y1="4" x2="20" y2="60" stroke="#e0a800" stroke-width="2"/><rect x="6" y="10" width="10" height="12" rx="2" fill="#fff8e0"/><rect x="24" y="10" width="10" height="12" rx="2" fill="#fff8e0"/></g></g></g>
+  <g transform="translate(153,398)"><rect width="36" height="80" rx="7" fill="#e63d86" stroke="#fff" stroke-width="4"/><rect x="8" y="8" width="20" height="14" rx="7" fill="#ffd0e6"/><circle cx="28" cy="44" r="3.5" fill="#ffd23f"/><circle cx="18" cy="62" r="5" fill="#fff" stroke="#e0a800" stroke-width="2"/><circle cx="18" cy="62" r="2.2" fill="#ffd23f"/></g>
+  <path d="M152 480 Q171 478 190 480 L200 600 L142 600Z" fill="${night?'#5a4a3a':'#e8d8c0'}" opacity=".9"/>
+  <g transform="translate(244,488)"><rect x="7" y="16" width="6" height="36" fill="#a9763f"/><rect width="28" height="21" rx="6" fill="#6aa6ff" stroke="#4a86df" stroke-width="3"/><path d="M0 6 L14 15 L28 6" stroke="#fff" stroke-width="2" fill="none"/><circle cx="24" cy="10" r="3" fill="#ffd23f"/></g>
+  <g transform="translate(14,496)"><rect x="0" y="58" width="104" height="14" rx="6" fill="#c79a5a"/>${[0,1,2,3].map(i=>`<g transform="translate(${14+i*26},${30+(i%2)*6})"><path d="M0 30 L0 12" stroke="#4bbf86" stroke-width="4"/><circle cy="7" r="8" fill="${['#ff7db5','#ffd23f','#b79cff','#ff8a3d'][i]}"/><circle cy="7" r="3" fill="#fff" opacity=".7"/></g>`).join('')}</g>
+  <g transform="translate(286,498)"><ellipse cx="52" cy="48" rx="52" ry="30" fill="#7fd0ff" stroke="#fff" stroke-width="5"/><ellipse cx="52" cy="44" rx="40" ry="21" fill="#3aa6f0"/><path d="M22 44 Q52 34 82 44" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/></g>
+  <g transform="translate(132,492) scale(0.62)">${houseSVG}</g>
+  <g id="yardPet" transform="translate(186,500) scale(0.27)">${petInner}</g>
+  </svg>`;
+}
+const HOME_TOYS=[
+  {id:'elev', x:302, y:135, w:54, h:345},
+  {id:'bell', x:150, y:394, w:40, h:86},   /* the door IS the doorbell — sized to the inter-window gap */
+  {id:'mail', x:238, y:482, w:42, h:58}
+];
+const HOME_ROOMS=[
+  {id:'gallery', x:150, y:60,  w:100, h:80},
+  {id:'bedroom', x:52,  y:140, w:104, h:104},{id:'bath',  x:186, y:140, w:104, h:104},
+  {id:'closet',  x:52,  y:256, w:104, h:104},{id:'salon', x:186, y:256, w:104, h:104},
+  {id:'kitchen', x:52,  y:371, w:104, h:104},{id:'party', x:186, y:371, w:104, h:104},
+  {id:'garden',  x:4,   y:486, w:118, h:110},{id:'pet',   x:128, y:482, w:144, h:114},
+  {id:'pool',    x:278, y:486, w:118, h:110}
+];
+function roomHome(){
+  const night=G.bedroom.time==='night';
+  const r=el(`<div class="room"><div class="scene" id="homeScene"><div class="sceneBg" id="homeBg">${sceneHome(night)}</div></div></div>`);
+  /* the letterbox bands show the scene div: sky above, ground below the 80% line (480/600) */
+  r.querySelector('#homeScene').style.background = night
+    ? 'linear-gradient(#1d1640 0%,#2b2356 80%,#1f3322 80%)'
+    : 'linear-gradient(#bfe9ff 0%,#e7f7ff 80%,#9bd97a 80%)';
+  const bg=r.querySelector('#homeBg');
+  let elevFloor=0; const stops=[0,-114,-228];
+  r.querySelector('#homeScene').addEventListener('click',ev=>{
+    const svg=bg.querySelector('svg'); if(!svg)return;
+    let pt; try{ pt=new DOMPoint(ev.clientX,ev.clientY).matrixTransform(svg.getScreenCTM().inverse()); }
+    catch(e){ S.sparkle(); sparkles(ev.clientX,ev.clientY,3); return; }   /* never silent, even on a CTM hiccup */
+    const hit=t=>pt.x>=t.x&&pt.x<=t.x+t.w&&pt.y>=t.y&&pt.y<=t.y+t.h;
+    const toy=HOME_TOYS.find(hit);
+    if(toy){
+      if(toy.id==='elev'){
+        const prev=elevFloor; elevFloor=(elevFloor+1)%3;
+        const car=bg.querySelector('#elevCar'); if(car)car.style.transform=`translateY(${stops[elevFloor]}px)`;
+        tone(660,.12,'sine',.14); setTimeout(()=>tone(880,.14,'sine',.14),150);
+        say(elevFloor>prev?'Going up!':'Going down!');
+        bg.querySelectorAll('.winF'+(elevFloor+1)).forEach(w=>{ w.classList.add('glowOnce'); setTimeout(()=>w.classList.remove('glowOnce'),1900); });
+      } else if(toy.id==='bell'){
+        tone(784,.18,'sine',.16); setTimeout(()=>tone(523,.22,'sine',.16),190);
+        say("Ding dong! Who's there?");
+        setTimeout(()=>{ if(!bg.isConnected)return;   /* she may have left the room mid-ding */
+          S[G.pet==='dog'?'woof':'meow'](); const p=bg.querySelector('#yardPet');
+          if(p){ const rc=p.getBoundingClientRect(); hearts(rc.left+rc.width/2,rc.top,3); } },900);
+      } else if(toy.id==='mail'){
+        S.pop(); say('You have mail!'); spriteAt(ev.clientX,ev.clientY,ICON.heart('#ff5fa2'),'floatUp',30);
+      }
+      return;
+    }
+    const room=HOME_ROOMS.find(hit);
+    if(room){ spriteAt(ev.clientX,ev.clientY,ICON.sparkle(),'pop',26); openRoom(room.id); return; }
+    S.sparkle(); sparkles(ev.clientX,ev.clientY,4);   /* the house answers every touch */
+  });
+  return r;
+}
+/* =========================================================================
+   ROOM REGISTRY + NAVIGATION
+   ========================================================================= */
+const ROOMS=[
+  {id:'home',   icon:NAVICON.home2,  label:'Home',  build:roomHome},
+  {id:'closet', icon:NAVICON.closet, label:'Dress', build:roomCloset},
+  {id:'gallery',icon:NAVICON.gallery,label:'Photos',build:roomGallery},
+  {id:'salon',  icon:NAVICON.salon,  label:'Salon', build:roomSalon},
+  {id:'kitchen',icon:NAVICON.kitchen,label:'Bake',  build:roomKitchen},
+  {id:'pet',    icon:NAVICON.pet,    label:'Pet',   build:roomPet},
+  {id:'bedroom',icon:NAVICON.bedroom,label:'Bed',   build:roomBedroom},
+  {id:'bath',   icon:NAVICON.bath,   label:'Bath',  build:roomBath},
+  {id:'garden', icon:NAVICON.garden, label:'Garden',build:roomGarden},
+  {id:'pool',   icon:NAVICON.pool,   label:'Pool',  build:roomPool},
+  {id:'party',  icon:NAVICON.party,  label:'Party', build:roomParty},
+];
+const stage=document.getElementById('stage');
+const nav=document.getElementById('nav');
+let current=null;
+function openRoom(id,quiet){
+  S.tap();
+  const def=ROOMS.find(x=>x.id===id); if(!def)return;
+  stage.innerHTML=''; const node=def.build(); stage.appendChild(node);
+  requestAnimationFrame(()=>node.classList.add('active'));
+  current=id;
+  nav.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on', b.dataset.id===id));
+  if(!quiet) say(ROOMSAY[id]||'');
+}
+function buildNav(){
+  nav.innerHTML='';
+  ROOMS.forEach(rm=>{ const b=el(`<button class="navbtn" data-id="${rm.id}"><span class="e">${rm.icon}</span>${rm.label}</button>`);
+    b.addEventListener('click',()=>openRoom(rm.id)); nav.appendChild(b); });
+}
+/* =========================================================================
+   TOP BAR
+   ========================================================================= */
+document.getElementById('title').innerHTML='<button class="homeBtn" id="goHomeBtn" aria-label="Go home">'+ICON.home()+'</button><span id="titleName">Dream House</span>';
+document.getElementById('goHomeBtn').addEventListener('click',()=>{ if(current!=='home')openRoom('home'); else openRoom('home',true); });
+const muteBtn=document.getElementById('muteBtn');
+function paintMute(){ muteBtn.textContent=muted?'🔇':'🔊'; }
+paintMute();
+muteBtn.addEventListener('click',()=>{ muted=!muted; Store.set('muted',muted); paintMute(); if(!muted)S.tap(); });
+/* =========================================================================
+   GROWN-UP GATE — the only way to erase the world.
+   Hidden entry: hold the tiny version mark (top-right) for 2s. Then hold the star 3s
+   (strict pointer discipline), then a parent-readable confirm. A child's
+   mash-taps and hold-and-watch both fail; "Go back to playing" always exits.
+   ========================================================================= */
+(function(){
+  const hit=document.getElementById('gateHit'), ovl=document.getElementById('gateOverlay');
+  const star=document.getElementById('holdStar'), fillEl=document.getElementById('holdFill');
+  const confirmRow=document.getElementById('gateConfirm');
+  let lpT=null, holdT=null, holdIv=null, activeId=null, idleT=null;
+  function armIdle(){ clearTimeout(idleT); idleT=setTimeout(closeGate,10000); }
+  function openGate(){ confirmRow.style.display='none'; fillEl.style.height='0%'; ovl.classList.add('on');
+    say('Ask a grown-up for help!'); armIdle(); }
+  function closeGate(){ ovl.classList.remove('on'); abortHold(); clearTimeout(idleT); }
+  function abortHold(){ clearTimeout(holdT); clearInterval(holdIv); holdT=null; holdIv=null; activeId=null; fillEl.style.height='0%'; }
+  hit.addEventListener('pointerdown',()=>{ clearTimeout(lpT); lpT=setTimeout(openGate,2000); });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>hit.addEventListener(ev,()=>clearTimeout(lpT)));
+  ovl.addEventListener('pointerdown',armIdle);
+  ovl.addEventListener('click',e=>{ if(e.target===ovl)closeGate(); });
+  document.getElementById('gateBack').addEventListener('click',()=>{ S.tap(); closeGate(); });
+  star.addEventListener('pointerdown',e=>{
+    if(activeId!==null){ abortHold(); return; }          /* a second touch aborts */
+    activeId=e.pointerId; try{ star.setPointerCapture(e.pointerId); }catch(_){}
+    let p=0; fillEl.style.height='0%';
+    holdIv=setInterval(()=>{ p+=4; fillEl.style.height=Math.min(100,p)+'%'; },120);
+    holdT=setTimeout(()=>{ abortHold(); fillEl.style.height='100%'; S.sparkle(); confirmRow.style.display='flex'; armIdle(); },3000);
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>star.addEventListener(ev,e=>{ if(e.pointerId===activeId)abortHold(); }));
+  window.addEventListener('blur',abortHold);
+  document.getElementById('gateYes').addEventListener('click',()=>{ Store.set('game',{}); location.reload(); });
+})();
+/* =========================================================================
+   START SCREEN
+   ========================================================================= */
+const startEl=document.getElementById('start');
+const nameInput=document.getElementById('nameInput');
+document.getElementById('startScene').innerHTML=`<svg viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="stG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd9ec"/><stop offset="1" stop-color="#cdeaff"/></linearGradient></defs><rect width="400" height="700" fill="url(#stG)"/><g transform="translate(330,90)"><circle r="44" fill="#fff3a0"/></g>${cloud(80,140,'drift')}${cloud(300,220,'drift2')}${cloud(140,330,'drift')}<g transform="translate(120,520)" opacity=".5">${pennant()}</g></svg>`;
+/* draw pet previews */
+document.querySelectorAll('.petcard').forEach(c=>{ const isDog=c.dataset.pet==='dog'; const save0=G.pet; G.pet=c.dataset.pet;
+  c.insertAdjacentHTML('afterbegin', renderPet()); G.pet=save0; });
+let chosenPet=G.pet||'dog';
+document.querySelectorAll('.petcard').forEach(c=>{
+  if(c.dataset.pet===chosenPet)c.classList.add('sel');
+  c.addEventListener('click',()=>{ S.pop(); chosenPet=c.dataset.pet;
+    document.querySelectorAll('.petcard').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); });
+});
+document.getElementById('playBtn').addEventListener('click',()=>{
+  ac();
+  const nm=(nameInput.value||'').trim()||'Friend';
+  G.name=nm; G.pet=chosenPet; if(!G.petName)G.petName=(chosenPet==='dog'?'Puppy':'Kitty');
+  if(!save())toast('Uh oh!');     /* never block her from playing; session continues either way */
+  startGame();
+});
+function startGame(){
+  document.getElementById('titleName').textContent=(G.name?G.name+"'s":'My')+' Dream House';
+  startEl.style.display='none';
+  buildNav(); openRoom('home',true); S.happy();
+  /* ONE merged utterance — say() cancels in-flight speech, so this must be a single call */
+  say('Welcome home, '+(G.name||'friend')+'!'+(G.petName?(' '+G.petName+' is so happy to see you!'):''));
+}
+if(G.name){ nameInput.value=G.name; startGame(); }
+else { nameInput.focus(); }
+window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
+</script>
+<script>
+/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v3) */
+(function(){
+  function badge(){ return document.getElementById('offlineBadge'); }
+  window.showOfflineReady=function(txt){ var b=badge(); if(!b)return; b.textContent=txt;
+    b.style.background='#5fd6b4'; b.style.color='#08311f'; b.style.display='block';
+    clearTimeout(b._t); b._t=setTimeout(function(){ b.style.display='none'; },8000); };
+  function showOfflineFail(txt){ var b=badge(); if(!b)return; b.textContent=txt;
+    b.style.background='#ffd23f'; b.style.color='#5a4500'; b.style.display='block'; }
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', async function(){
+      try { var reg = await navigator.serviceWorker.register('sw.js'); console.log('SW ok', reg.scope); }
+      catch (err) { console.error('SW register FAILED', err);
+        showOfflineFail('Not offline-ready — keep this page open, then reload'); return; }
+      var need = ['./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png',
+                  './icon-512-maskable.png','./apple-touch-icon-180.png'];
+      var checkReady = async function(){
+        try {
+          await navigator.serviceWorker.ready;                 // resolves only once a SW is ACTIVE
+          var c = await caches.open('dreamhouse-v3');
+          var hits = await Promise.all(need.map(function(u){ return c.match(u, { ignoreSearch:true }); }));
+          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v3'); return true; }
+        } catch (e) { console.warn('offline-check', e); }
+        return false;
+      };
+      if (!(await checkReady())) {                              // poll for a slow first install
+        navigator.serviceWorker.addEventListener('controllerchange', checkReady);
+        var n = 0;
+        var t = setInterval(async function(){
+          if (await checkReady() || ++n >= 5) { clearInterval(t);
+            if (n>=5){ var b=badge(); if(b && b.style.display==='none') showOfflineFail('Not offline-ready yet — reload while online'); } }
+        }, 1500);
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
