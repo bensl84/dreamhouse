@@ -1,5 +1,7 @@
 # Dream House
 
+![Dream House — main screen](docs/screenshot.png)
+
 A free, ad-free, offline dress-up and play sandbox built for one specific kid — but anyone can play it. No accounts, no purchases, no data collection, no internet required. It's a single HTML file that runs in any browser, phone, or tablet.
 
 ## Play it
