@@ -8,7 +8,7 @@ Google, no names anywhere in it). Have the iPad in hand first.
 1. Open the link in **Safari**.
 2. Tap the **Share** button (square with the up-arrow) → **Add to Home Screen** → **Add**.
 3. Tap the new **Dream House** icon on the home screen and wait for the green badge:
-   **"Offline Ready ✓ v4"** — it must appear INSIDE the app you opened from the icon
+   **"Offline Ready ✓ v4.1"** — it must appear INSIDE the app you opened from the icon
    (not just in Safari). That's the signal everything is downloaded.
 4. **Airplane-Mode test:** turn ON Airplane Mode → fully close the app → tap the icon again.
    It must open and play with no internet.
@@ -30,6 +30,6 @@ Do steps 3–5 BEFORE handing the iPad to her.
 
 ## For grown-ups: how to reset the game (erases EVERYTHING)
 The reset is hidden from kids on purpose:
-1. Press and HOLD the tiny **version** mark (says v4) in the top-right corner for **2 seconds**.
+1. Press and HOLD the tiny **version** mark (says v4.1) in the top-right corner for **2 seconds**.
 2. In the "Grown-ups only" screen, HOLD the **star** for **3 seconds** (keep your finger still).
 3. Tap the small **"YES, erase"** button. ("Go back to playing" exits without erasing.)

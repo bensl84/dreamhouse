@@ -222,7 +222,7 @@
 </head>
 <body>
 <div id="offlineBadge" onclick="this.style.display='none'" style="display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:9999; font:700 13px/1 -apple-system,system-ui,sans-serif; padding:7px 14px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.18); cursor:pointer; white-space:nowrap;"></div>
-<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4</div>
+<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.1</div>
 <button id="gateHit" aria-hidden="true" tabindex="-1"></button>
 <div id="snapFlash"></div>
 <div id="gateOverlay" class="ovl"><div class="card" id="gateCard">
@@ -1270,7 +1270,7 @@ function roomPool(){
   draw();
   const uniMini=`<svg viewBox="0 0 100 100"><circle cx="50" cy="54" r="34" fill="#fff" stroke="#f0e0ff" stroke-width="3"/><circle cx="50" cy="54" r="16" fill="#bfeeff"/><path d="M72 34 C82 20 94 20 96 30 C97 38 90 44 80 48Z" fill="#fff"/><path d="M82 18 L88 32 L74 29Z" fill="#ffd23f"/><g stroke-linecap="round" stroke-width="4" fill="none"><path d="M72 26 C66 32 64 40 66 45" stroke="#ff5fa2"/><path d="M78 24 C72 30 70 40 73 46" stroke="#5fd6b4"/></g></svg>`;
   r.querySelector('#floatRow').appendChild(swatchRow([['unicorn',uniMini]].concat(BRIGHT.slice(0,5)),()=>floatie,v=>{floatie=v;draw(); if(v==='unicorn')say('A unicorn floatie!');}));
-  r.querySelector('.btnrow')?.remove();
+  var oldBtnrow=r.querySelector('.btnrow'); if(oldBtnrow) oldBtnrow.remove();
   const slideRow=el('<div class="btnrow"><button class="bigbtn" id="slideBtn">🛝 Ride the slide!</button></div>');
   r.querySelector('.tray').insertBefore(slideRow,r.querySelector('.tray').firstChild);
   slideRow.querySelector('#slideBtn').addEventListener('click',()=>{
@@ -1587,7 +1587,7 @@ else { nameInput.focus(); }
 window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
 </script>
 <script>
-/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4) */
+/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.1) */
 (function(){
   function badge(){ return document.getElementById('offlineBadge'); }
   window.showOfflineReady=function(txt){ var b=badge(); if(!b)return; b.textContent=txt;
@@ -1605,9 +1605,9 @@ window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
       var checkReady = async function(){
         try {
           await navigator.serviceWorker.ready;                 // resolves only once a SW is ACTIVE
-          var c = await caches.open('dreamhouse-v4');
+          var c = await caches.open('dreamhouse-v4.1');
           var hits = await Promise.all(need.map(function(u){ return c.match(u, { ignoreSearch:true }); }));
-          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4'); return true; }
+          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.1'); return true; }
         } catch (e) { console.warn('offline-check', e); }
         return false;
       };
