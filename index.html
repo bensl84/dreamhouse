@@ -88,6 +88,16 @@
   .sw.big{width:74px;height:88px;border-radius:14px;}
   .sw.big svg{width:60px;height:78px;}
   .sw:active{transform:scale(.88);}
+  /* Dress Up matches the reference frame on tablets: doll left, outfit rail on the right */
+  @media (min-width:700px){
+    .room.sideRail{flex-direction:row;}
+    .room.sideRail .scene{flex:1 1 auto;}
+    .room.sideRail .tray{flex:0 0 292px; max-height:none;
+      border-left:5px solid #f2b8d4; box-shadow:-6px 0 16px var(--shadow);
+      padding-bottom:max(10px,env(safe-area-inset-bottom));}
+    .room.sideRail .tray .swatches{justify-content:center;}
+    .room.sideRail .tray .tabrow{flex-wrap:wrap; justify-content:center;}
+  }
   .sw.sel{outline:4px solid var(--yellow); outline-offset:1px; transform:scale(1.06);}
   .bigbtn{border:none; border-radius:22px; padding:14px 22px; font-weight:800; font-size:17px;
     color:#fff; background:linear-gradient(#ff7db5,#ff4f97);
@@ -222,7 +232,7 @@
 </head>
 <body>
 <div id="offlineBadge" onclick="this.style.display='none'" style="display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:9999; font:700 13px/1 -apple-system,system-ui,sans-serif; padding:7px 14px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.18); cursor:pointer; white-space:nowrap;"></div>
-<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.1</div>
+<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.2</div>
 <button id="gateHit" aria-hidden="true" tabindex="-1"></button>
 <div id="snapFlash"></div>
 <div id="gateOverlay" class="ovl"><div class="card" id="gateCard">
@@ -773,7 +783,7 @@ function emojiBurst(x,y){ ['🤩','😍','😊'].forEach((e,i)=>setTimeout(()=>s
    ROOM: CLOSET
    ========================================================================= */
 function roomCloset(){
-  const r=el(`<div class="room">
+  const r=el(`<div class="room sideRail">
     <div class="scene"><div class="sceneBg">${SCENE.closet()}</div><div class="roomname">Dress Up</div>
       <div class="stagecanvas" id="dollCanvas"></div>
       <button id="snapBtn" aria-label="take a photo">📸</button>
@@ -876,6 +886,9 @@ function roomKitchen(){
   r.querySelector('.scene').appendChild(bub);
   const mealSpot=el('<div id="mealSpot" style="position:absolute;right:7%;bottom:16%;width:112px;pointer-events:none;"></div>');
   r.querySelector('.scene').appendChild(mealSpot);
+  /* she cooks WITH you, like the reference */
+  const cook=el(`<div style="position:absolute;left:2%;bottom:13%;width:150px;pointer-events:none;"><div class="idle">${renderDoll({w:150})}</div></div>`);
+  r.querySelector('.scene').appendChild(cook);
   const MEALSAY={burger:'A yummy burger!',pizza:'Pizza time!',cupcake:'A sweet cupcake!',chicken:'Dinner is ready!'};
   bub.querySelectorAll('.foodChip').forEach(ch=>ch.addEventListener('click',e=>{
     const f=ch.dataset.food; S.pop(); say(MEALSAY[f]);
@@ -1309,7 +1322,15 @@ function roomParty(){
       <button class="bigbtn sun" id="danceBtn">💃 Dance!</button>
       <button class="bigbtn alt" id="confettiBtn">🎊 Confetti</button></div></div></div>`);
   const canvas=r.querySelector('#partyCanvas'); const scene=r.querySelector('#partyScene'); const bg=r.querySelector('#partyBg');
-  canvas.innerHTML=`<div class="idle">${renderDoll({w:Math.min(220,window.innerWidth*.55)})}</div>`;
+  /* dance parties are for FRIENDS — two guest dolls flank her, like the reference */
+  const friendA={skin:'#8d5524',hairColor:'#2b1a12',hair:'curly',outfit:'party',outfitColor:'#37b6ff',shoes:'#ffd23f',lip:'#c43d6b',accessories:{}};
+  const friendB={skin:'#f3c8a6',hairColor:'#e0a000',hair:'pony',outfit:'topskirt',outfitColor:'#5fd6b4',shoes:'#ff5fa2',lip:'#ff8a9e',accessories:{}};
+  const dollW=Math.min(200,window.innerWidth*.42);
+  canvas.innerHTML=`<div class="idle" id="danceCrew" style="display:flex;align-items:flex-end;justify-content:center;gap:2px;">
+    <div style="width:${Math.round(dollW*.72)}px;">${renderDoll({doll:friendA,w:Math.round(dollW*.72)})}</div>
+    <div style="width:${dollW}px;">${renderDoll({w:dollW})}</div>
+    <div style="width:${Math.round(dollW*.72)}px;">${renderDoll({doll:friendB,w:Math.round(dollW*.72)})}</div>
+  </div>`;
   const BCOL=['#ff5fa2','#ffd23f','#5fd6b4','#6aa6ff','#ff8a3d','#b79cff'];
   r.querySelector('#balloonBtn').addEventListener('click',()=>{ S.pop(); say('Balloons!');
     for(let i=0;i<6;i++)setTimeout(()=>spriteAt(Math.random()*window.innerWidth, window.innerHeight*.6, ICON.balloon(BCOL[i%BCOL.length]),'floatUp',44),i*120); });
@@ -1587,7 +1608,7 @@ else { nameInput.focus(); }
 window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
 </script>
 <script>
-/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.1) */
+/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.2) */
 (function(){
   function badge(){ return document.getElementById('offlineBadge'); }
   window.showOfflineReady=function(txt){ var b=badge(); if(!b)return; b.textContent=txt;
@@ -1605,9 +1626,9 @@ window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
       var checkReady = async function(){
         try {
           await navigator.serviceWorker.ready;                 // resolves only once a SW is ACTIVE
-          var c = await caches.open('dreamhouse-v4.1');
+          var c = await caches.open('dreamhouse-v4.2');
           var hits = await Promise.all(need.map(function(u){ return c.match(u, { ignoreSearch:true }); }));
-          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.1'); return true; }
+          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.2'); return true; }
         } catch (e) { console.warn('offline-check', e); }
         return false;
       };
