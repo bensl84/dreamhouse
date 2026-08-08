@@ -62,3 +62,5 @@ MIT — see `LICENSE`.
 ## Version
 v3 — THE DOLLHOUSE: mansion cross-section home screen (tap rooms to enter; elevator, doorbell, mailbox; day/night follows the bedroom; her pet in the yard), installable-offline (cache dreamhouse-v3).
 v2 — fridge photo gallery, grown-up-gated reset, pet naming, new outfits/hair/wings, bedroom stickers, richer animated rooms.
+
+v4 — THE GLOW-UP: saturated dreamhouse look (hot-pink mansion, furnished window scenes, roof-garden flower boxes, big pool with purple waterslide + unicorn floatie), the doll redrawn to tall fashion-doll proportions (all 8 outfits, 7 hairstyles, and accessories reworked), dress-up rack with garment-preview cards and emoji celebrations, kitchen food-bubble cooking (burger/pizza/cupcake/chicken plated on the counter), disco dance floor + DJ booth in the party room, ride-the-slide pool action, four new bedroom stickers (teddy, ball, clock, lava lamp), and a brand-new Care Clinic room (listen, bandage, lollipop). Installable-offline (cache dreamhouse-v4).
