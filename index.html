@@ -68,6 +68,11 @@
   .scene{flex:1 1 auto; position:relative; overflow:hidden; min-height:0;}
   .sceneBg{position:absolute;inset:0;width:100%;height:100%;}
   .sceneBg svg{position:absolute;inset:0;width:100%;height:100%;}
+  .backBtn{position:absolute; top:10px; left:12px; z-index:7; width:56px; height:56px; border:none; border-radius:50%;
+    background:linear-gradient(#ffffff,#ffe9f3); box-shadow:0 5px 12px var(--shadow), inset 0 2px 2px #fff;
+    display:grid; place-items:center; cursor:pointer; transition:transform .12s ease;}
+  .backBtn svg{width:30px;height:30px;}
+  .backBtn:active{transform:scale(.88);}
   .roomname{position:absolute; top:8px; left:50%; transform:translateX(-50%);
     background:linear-gradient(#fff,#fff0f7); padding:6px 20px; border-radius:30px; font-weight:800; font-size:16px;
     color:var(--pink-deep); box-shadow:0 6px 14px var(--shadow), inset 0 2px 2px #fff; z-index:5; white-space:nowrap;}
@@ -232,7 +237,7 @@
 </head>
 <body>
 <div id="offlineBadge" onclick="this.style.display='none'" style="display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:9999; font:700 13px/1 -apple-system,system-ui,sans-serif; padding:7px 14px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.18); cursor:pointer; white-space:nowrap;"></div>
-<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.2</div>
+<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.3</div>
 <button id="gateHit" aria-hidden="true" tabindex="-1"></button>
 <div id="snapFlash"></div>
 <div id="gateOverlay" class="ovl"><div class="card" id="gateCard">
@@ -1467,8 +1472,31 @@ function roomHome(){
     ? 'linear-gradient(#1d1640 0%,#2b2356 80%,#1f3322 80%)'
     : 'linear-gradient(#8fd0ff 0%,#e3f6ff 80%,#7ed957 80%)';
   const bg=r.querySelector('#homeBg');
+  const sceneEl=r.querySelector('#homeScene');
   let elevFloor=0; const stops=[0,-114,-228];
-  r.querySelector('#homeScene').addEventListener('click',ev=>{
+  /* she LIVES here — the doll stands in the yard and walks where you tap, like the reference */
+  const homeDoll=el(`<div id="homeDoll" style="position:absolute;left:0;top:0;width:64px;pointer-events:none;z-index:4;transition:transform .55s ease;">${renderDoll({w:64})}</div>`);
+  sceneEl.appendChild(homeDoll);
+  function svgToScene(x,y){ const svg=bg.querySelector('svg'); if(!svg)return null;
+    try{ const p=new DOMPoint(x,y).matrixTransform(svg.getScreenCTM()); const rc=sceneEl.getBoundingClientRect();
+      return {x:p.x-rc.left, y:p.y-rc.top}; }catch(e){ return null; } }
+  function placeDoll(sx,sy,walkCls){ const p=svgToScene(sx,sy); if(!p)return;
+    homeDoll.style.transform=`translate(${Math.round(p.x-32)}px,${Math.round(p.y-92)}px)`;
+    if(walkCls){ const inner=homeDoll.firstElementChild; if(inner){ inner.style.animation='wiggle .55s ease 1'; setTimeout(()=>{ if(inner.isConnected) inner.style.animation=''; },600); } } }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>placeDoll(150,486)));
+  window.addEventListener('resize',()=>{ if(sceneEl.isConnected) placeDoll(150,486); });
+  /* gentle idle hint — a pointing hand appears if she hasn't tapped for a while */
+  let hand=null, handTimer=null;
+  function clearHand(){ if(hand){ hand.remove(); hand=null; } if(handTimer){ clearTimeout(handTimer); handTimer=null; } }
+  function armHand(){ clearHand();
+    handTimer=setTimeout(()=>{ if(!sceneEl.isConnected)return;
+      const t=HOME_ROOMS[Math.floor(Math.random()*HOME_ROOMS.length)];
+      const p=svgToScene(t.x+t.w/2, t.y+t.h*0.7); if(!p)return;
+      hand=el(`<div style="position:absolute;left:${Math.round(p.x)}px;top:${Math.round(p.y)}px;width:56px;z-index:6;pointer-events:none;"><div class="idle"><svg viewBox="0 0 60 60"><path d="M22 6 C26 4 29 7 29 12 L29 24 C33 22 37 23 38 27 C42 26 46 28 46 32 C50 32 53 35 52 40 C51 48 46 54 36 55 C26 56 18 52 15 44 L10 32 C8 27 12 24 16 26 L20 30 L20 12 C20 9 20 7 22 6Z" fill="#f6cba6" stroke="#d6a578" stroke-width="2.5"/></svg></div></div>`);
+      sceneEl.appendChild(hand); },8000); }
+  armHand();
+  sceneEl.addEventListener('click',ev=>{
+    clearHand(); armHand();
     const svg=bg.querySelector('svg'); if(!svg)return;
     let pt; try{ pt=new DOMPoint(ev.clientX,ev.clientY).matrixTransform(svg.getScreenCTM().inverse()); }
     catch(e){ S.sparkle(); sparkles(ev.clientX,ev.clientY,3); return; }   /* never silent, even on a CTM hiccup */
@@ -1493,7 +1521,16 @@ function roomHome(){
       return;
     }
     const room=HOME_ROOMS.find(hit);
-    if(room){ spriteAt(ev.clientX,ev.clientY,ICON.sparkle(),'pop',26); openRoom(room.id); return; }
+    if(room){
+      spriteAt(ev.clientX,ev.clientY,ICON.sparkle(),'pop',26);
+      /* she walks over first, then the room opens */
+      const gy=room.y>470 ? Math.min(room.y+room.h*0.6,566) : 486;
+      const gx=Math.max(60,Math.min(340,room.x+room.w/2));
+      placeDoll(gx,gy,true); S.tap();
+      setTimeout(()=>{ if(sceneEl.isConnected) openRoom(room.id); },560);
+      return;
+    }
+    if(pt.y>440&&pt.y<590&&pt.x>4&&pt.x<396){ placeDoll(pt.x,Math.max(460,Math.min(566,pt.y)),true); S.sparkle(); sparkles(ev.clientX,ev.clientY,3); return; }
     S.sparkle(); sparkles(ev.clientX,ev.clientY,4);   /* the house answers every touch */
   });
   return r;
@@ -1522,6 +1559,13 @@ function openRoom(id,quiet){
   S.tap();
   const def=ROOMS.find(x=>x.id===id); if(!def)return;
   stage.innerHTML=''; const node=def.build(); stage.appendChild(node);
+  /* every room except home gets the big round back button, like the reference */
+  if(id!=='home'){
+    const sc=node.querySelector('.scene');
+    if(sc){ const bb=el('<button class="backBtn" aria-label="go back home"><svg viewBox="0 0 48 48"><path d="M30 10 L14 24 L30 38" stroke="#e0177c" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></button>');
+      bb.addEventListener('click',(ev)=>{ ev.stopPropagation(); openRoom('home'); },true);
+      sc.appendChild(bb); }
+  }
   requestAnimationFrame(()=>node.classList.add('active'));
   current=id;
   nav.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on', b.dataset.id===id));
@@ -1608,7 +1652,7 @@ else { nameInput.focus(); }
 window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
 </script>
 <script>
-/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.2) */
+/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.3) */
 (function(){
   function badge(){ return document.getElementById('offlineBadge'); }
   window.showOfflineReady=function(txt){ var b=badge(); if(!b)return; b.textContent=txt;
@@ -1626,9 +1670,9 @@ window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
       var checkReady = async function(){
         try {
           await navigator.serviceWorker.ready;                 // resolves only once a SW is ACTIVE
-          var c = await caches.open('dreamhouse-v4.2');
+          var c = await caches.open('dreamhouse-v4.3');
           var hits = await Promise.all(need.map(function(u){ return c.match(u, { ignoreSearch:true }); }));
-          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.2'); return true; }
+          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.3'); return true; }
         } catch (e) { console.warn('offline-check', e); }
         return false;
       };
