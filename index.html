@@ -54,7 +54,7 @@
   }
   #nav::-webkit-scrollbar{display:none;}
   .navbtn{
-    flex:0 0 auto; width:56px; height:64px; border:none; border-radius:16px; background:transparent;
+    flex:0 0 auto; width:52px; height:64px; border:none; border-radius:15px; background:transparent;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     cursor:pointer; transition:transform .12s ease, background .2s; font-size:11px; font-weight:700;
     color:var(--ink);
@@ -237,7 +237,7 @@
 </head>
 <body>
 <div id="offlineBadge" onclick="this.style.display='none'" style="display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:9999; font:700 13px/1 -apple-system,system-ui,sans-serif; padding:7px 14px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.18); cursor:pointer; white-space:nowrap;"></div>
-<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.3</div>
+<div id="verStamp" style="position:fixed; right:7px; top:max(72px,calc(env(safe-area-inset-top) + 68px)); z-index:9998; font:700 10px/1 -apple-system,system-ui,sans-serif; color:#c98fb0; opacity:.65; pointer-events:none;">v4.4</div>
 <button id="gateHit" aria-hidden="true" tabindex="-1"></button>
 <div id="snapFlash"></div>
 <div id="gateOverlay" class="ovl"><div class="card" id="gateCard">
@@ -330,7 +330,7 @@ const COUNT=['one','two','three','four','five','six','seven','eight','nine','ten
 function sayCount(n){ say(COUNT[Math.min(Math.max(n,1),10)-1]); }
 const COLORNAME={ '#ff5fa2':'pink','#ff7db5':'pink','#ff6bd1':'pink','#e85a7a':'pink','#d94f7a':'pink','#ff3b6b':'red','#ff3b54':'red','#ff3b6b ':'red','#ffd23f':'yellow','#e0a000':'gold','#5fd6b4':'green','#48c9a6':'green','#b79cff':'purple','#7b4fd9':'purple','#3aa0ff':'blue','#6aa6ff':'blue','#ff8a3d':'orange','#ffffff':'white','#5a3d52':'dark','#5fc0ff':'blue','#2b1a12':'brown','#6b3b1f':'brown','#7a4a2b':'brown','#a9692e':'brown','#e8e8e8':'silver' };
 function sayColor(hex){ const n=COLORNAME[hex]; if(n)say(n+'!'); }
-const ROOMSAY={ home:"Welcome home!", closet:"Let's play dress up!", gallery:"Look at your fridge!", salon:"Welcome to the salon!", kitchen:"Let's bake a cake!", pet:"Say hi to your pet!", bedroom:"Time for the bedroom!", bath:"Bubble bath time!", garden:"Let's visit the garden!", pool:"Pool party!", party:"Let's have a party!" };
+const ROOMSAY={ home:"Welcome home!", closet:"Let's play dress up!", gallery:"Look at your fridge!", salon:"Welcome to the salon!", kitchen:"Let's bake a cake!", pet:"Say hi to your pet!", clinic:"Welcome to the care clinic!", stable:"Let's visit the pony!", bedroom:"Time for the bedroom!", bath:"Bubble bath time!", garden:"Let's visit the garden!", pool:"Pool party!", party:"Let's have a party!" };
 /* =========================================================================
    GAME STATE
    ========================================================================= */
@@ -427,7 +427,8 @@ const NAVICON={
   party:`<svg viewBox="0 0 100 100"><path d="M22 82 L44 38 L62 56Z" fill="#ffd23f"/><circle cx="60" cy="30" r="6" fill="#ff5fa2"/><circle cx="76" cy="46" r="5" fill="#5fd6b4"/><circle cx="40" cy="24" r="5" fill="#6aa6ff"/></svg>`,
   gallery:`<svg viewBox="0 0 100 100"><rect x="26" y="10" width="48" height="80" rx="9" fill="#dff2ff" stroke="#9fc9e8" stroke-width="4"/><line x1="26" y1="38" x2="74" y2="38" stroke="#9fc9e8" stroke-width="4"/><rect x="34" y="46" width="24" height="26" rx="2" fill="#fff" stroke="#ffb8d8" stroke-width="2"/><circle cx="46" cy="57" r="7" fill="#ff7db5"/><circle cx="64" cy="22" r="4" fill="#ff5fa2"/><circle cx="38" cy="24" r="4" fill="#ffd23f"/></svg>`,
   home2:`<svg viewBox="0 0 100 100"><path d="M14 46 L50 16 L86 46 Z" fill="#ff4f97"/><rect x="22" y="46" width="56" height="40" rx="6" fill="#ffd9ec" stroke="#fff" stroke-width="3"/><rect x="30" y="54" width="14" height="12" rx="3" fill="#cdeeff"/><rect x="56" y="54" width="14" height="12" rx="3" fill="#cdeeff"/><rect x="42" y="64" width="16" height="22" rx="6" fill="#e63d86"/><path d="M50 22 c-3 -5 -11 -3 -11 2 c0 4 7 8 11 11 c4 -3 11 -7 11 -11 c0 -5 -8 -7 -11 -2Z" fill="#fff"/></svg>`,
-  clinic:`<svg viewBox="0 0 100 100"><rect x="16" y="24" width="68" height="56" rx="14" fill="#fff" stroke="#ff7db5" stroke-width="5"/><path d="M50 36 L50 68 M34 52 L66 52" stroke="#f23a93" stroke-width="11" stroke-linecap="round"/></svg>`
+  clinic:`<svg viewBox="0 0 100 100"><rect x="16" y="24" width="68" height="56" rx="14" fill="#fff" stroke="#ff7db5" stroke-width="5"/><path d="M50 36 L50 68 M34 52 L66 52" stroke="#f23a93" stroke-width="11" stroke-linecap="round"/></svg>`,
+  stable:`<svg viewBox="0 0 100 100"><path d="M14 48 L50 20 L86 48 L86 84 L14 84Z" fill="#d9534f" stroke="#b23c38" stroke-width="4"/><path d="M8 50 L50 16 L92 50 L84 50 L50 24 L16 50Z" fill="#8a5a3b"/><rect x="38" y="52" width="24" height="32" rx="4" fill="#8a5a3b"/><path d="M38 52 L62 84 M62 52 L38 84" stroke="#6e4227" stroke-width="4"/><circle cx="50" cy="40" r="7" fill="#ffd23f"/></svg>`
 };
 /* =========================================================================
    CHARACTER ART — doll
@@ -716,7 +717,14 @@ const SCENE={
     <g transform="translate(252,130)"><rect x="-6" y="-6" width="120" height="86" rx="12" fill="#fff" stroke="#f2b8d4" stroke-width="5"/><path d="M8 40 L26 40 L34 18 L46 62 L56 30 L64 40 L100 40" stroke="#f23a93" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="34" cy="18" r="3.5" fill="#f23a93"/></g>
     <g transform="translate(258,320)"><rect width="112" height="90" rx="12" fill="#37b6ff"/><rect y="-14" width="112" height="22" rx="10" fill="#5fc9ff"/><path d="M42 24 C42 16 56 16 56 24 C56 16 70 16 70 24 C70 36 56 44 56 44 C56 44 42 36 42 24Z" fill="#fff"/><rect x="12" y="56" width="88" height="10" rx="5" fill="#2b96d6"/></g>
     <g transform="translate(40,330)"><rect x="26" y="60" width="14" height="34" fill="#c98a4b"/><ellipse cx="33" cy="94" rx="26" ry="7" fill="#e8b98a"/><path d="M33 62 C10 58 2 34 10 18 C26 24 36 42 33 62Z" fill="#48c9a6"/><path d="M33 62 C56 58 64 34 56 18 C40 24 30 42 33 62Z" fill="#5fd6b4"/></g>
-    <g transform="translate(150,60)"><rect width="100" height="54" rx="12" fill="#fff" stroke="#f2b8d4" stroke-width="4"/><path d="M50 14 L50 40 M37 27 L63 27" stroke="#f23a93" stroke-width="9" stroke-linecap="round"/></g></svg>`; }
+    <g transform="translate(150,60)"><rect width="100" height="54" rx="12" fill="#fff" stroke="#f2b8d4" stroke-width="4"/><path d="M50 14 L50 40 M37 27 L63 27" stroke="#f23a93" stroke-width="9" stroke-linecap="round"/></g></svg>`; },
+  stable(){ return `<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="stW" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c94a45"/><stop offset="1" stop-color="#a83b37"/></linearGradient><linearGradient id="stF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0cf7e"/><stop offset="1" stop-color="#d9ae55"/></linearGradient></defs>
+    <rect width="400" height="600" fill="url(#stW)"/>
+    <g stroke="#963330" stroke-width="4">${[...Array(6)].map((_,i)=>`<line x1="0" y1="${i*70+14}" x2="400" y2="${i*70+14}"/>`).join('')}</g>
+    <g stroke="#b8534e" stroke-width="2" opacity=".6">${[...Array(9)].map((_,i)=>`<line x1="${i*48+20}" y1="0" x2="${i*48+20}" y2="420"/>`).join('')}</g>
+    <g transform="translate(252,64)"><rect x="-8" y="-8" width="128" height="100" rx="10" fill="#8a5a3b" stroke="#6e4227" stroke-width="5"/><rect width="112" height="84" fill="#bfe9ff"/><path d="M0 60 Q30 40 62 56 T112 52 L112 84 L0 84Z" fill="#8fdd66"/><circle cx="88" cy="20" r="12" fill="#ffe07a"/><line x1="56" y1="0" x2="56" y2="84" stroke="#6e4227" stroke-width="5"/><line x1="0" y1="42" x2="112" y2="42" stroke="#6e4227" stroke-width="5"/></g>
+    <g transform="translate(36,100)"><path d="M22 0 C6 0 0 12 0 22 C0 34 10 42 22 42 C34 42 44 34 44 22 C44 12 38 0 22 0Z" fill="none" stroke="#8a8f98" stroke-width="8" stroke-linecap="round"/><path d="M8 34 L14 28 M36 34 L30 28" stroke="#8a8f98" stroke-width="6" stroke-linecap="round"/></g>
+    <rect y="420" width="400" height="180" fill="url(#stF)"/></svg>`; }
 };
 /* cls wraps the puffs in an inner group so CSS transform animation never fights the positioning transform */
 function cloud(x,y,cls){ return `<g transform="translate(${x},${y})"><g ${cls?`class="${cls}"`:''} fill="#ffffff" opacity=".85"><ellipse cx="0" cy="0" rx="30" ry="20"/><ellipse cx="26" cy="6" rx="24" ry="16"/><ellipse cx="-24" cy="6" rx="22" ry="15"/></g></g>`; }
@@ -1062,6 +1070,93 @@ function roomClinic(){
     S.happy(); say('So brave! Here is a lollipop!');
     spriteAt(e.clientX,e.clientY,`<svg viewBox="0 0 60 60"><rect x="28" y="26" width="5" height="30" rx="2.5" fill="#e8d8c8"/><circle cx="30" cy="18" r="14" fill="#ff5fa2"/><path d="M30 6 A12 12 0 0 1 42 18" stroke="#fff" stroke-width="4" fill="none"/><path d="M30 30 A12 12 0 0 1 18 18" stroke="#ffd23f" stroke-width="4" fill="none"/></svg>`,'floatUp',44);
     confetti(24); paint();
+  });
+  return r;
+}
+/* the pony — cream coat, golden mane, pink leg wraps, big friendly eye (side view, facing left) */
+function renderPony(){
+  const coat='#f3e6cd', coatD='#e0cba4', coatL='#faf3e3', mane='#e8b84a', maneD='#c99a2e', wrap='#ff8ad6';
+  return `<svg viewBox="0 0 340 300" width="270" aria-label="pony">
+  <ellipse cx="170" cy="282" rx="120" ry="14" fill="#5a3d52" opacity=".14"/>
+  <path d="M258 148 C284 160 292 196 288 232 C286 260 272 276 262 274 C252 272 254 252 258 236 C262 216 258 190 248 172Z" fill="${mane}"/>
+  <path d="M262 160 C280 180 282 226 272 258" stroke="${maneD}" stroke-width="5" fill="none" opacity=".6"/>
+  <g>
+    <path d="M96 236 L92 274 C92 280 100 282 104 276 L112 240Z" fill="${coat}"/><path d="M92 272 L106 272 L104 284 L90 284Z" fill="#8a5a3b"/>
+    <path d="M226 236 L230 274 C230 280 222 282 218 276 L210 240Z" fill="${coatD}"/><path d="M216 272 L232 272 L230 284 L216 284Z" fill="#8a5a3b"/>
+    <rect x="93" y="242" width="20" height="13" rx="5" fill="${wrap}"/><rect x="211" y="242" width="20" height="13" rx="5" fill="${wrap}"/>
+  </g>
+  <path d="M84 160 C76 200 82 232 100 244 C150 258 200 258 244 244 C260 230 264 196 254 160 C230 140 110 140 84 160Z" fill="${coat}"/>
+  <path d="M100 244 C150 258 200 258 244 244 C244 250 240 254 232 256 C180 266 130 264 108 254 C102 250 100 247 100 244Z" fill="${coatD}" opacity=".7"/>
+  <g>
+    <path d="M128 240 L124 278 C124 284 132 286 136 280 L144 244Z" fill="${coatL}"/><path d="M124 276 L138 276 L136 288 L122 288Z" fill="#8a5a3b"/>
+    <path d="M196 240 L200 278 C200 284 192 286 188 280 L180 244Z" fill="${coat}"/><path d="M188 276 L204 276 L202 288 L188 288Z" fill="#8a5a3b"/>
+    <rect x="125" y="248" width="20" height="13" rx="5" fill="${wrap}"/><rect x="181" y="248" width="20" height="13" rx="5" fill="${wrap}"/>
+  </g>
+  <path d="M96 172 C74 150 64 116 70 84 C86 76 102 82 108 96 C114 82 130 78 142 86 C150 68 170 66 180 78 L172 130 C150 152 118 166 96 172Z" fill="${mane}"/>
+  <path d="M108 170 C88 148 80 120 84 94" stroke="${maneD}" stroke-width="5" fill="none" opacity=".55"/>
+  <path d="M92 160 C84 130 92 96 112 76 C134 56 160 56 172 74 C180 88 176 108 164 124 C150 142 116 158 92 160Z" fill="${coat}"/>
+  <path d="M118 64 L104 30 C102 24 110 20 114 26 L132 56Z" fill="${coat}"/><path d="M116 58 L108 34 C112 32 116 34 118 40Z" fill="#f2a6c8"/>
+  <path d="M148 60 L146 24 C146 18 156 18 156 24 L158 58Z" fill="${coat}"/><path d="M152 52 L151 28 C154 28 156 32 156 38Z" fill="#f2a6c8"/>
+  <path d="M100 64 C112 46 134 40 150 48 C142 64 120 72 100 64Z" fill="${mane}"/>
+  <path d="M92 160 C74 156 60 144 54 128 C50 114 58 102 72 102 C88 102 98 116 100 132 C101 144 98 154 92 160Z" fill="${coatL}"/>
+  <path d="M60 124 C64 132 74 138 84 138" stroke="${coatD}" stroke-width="4" fill="none" opacity=".5"/>
+  <ellipse cx="66" cy="118" rx="5" ry="6.5" fill="#7c5a3a"/>
+  <path d="M56 138 q10 8 20 2" stroke="#b98a68" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <g><ellipse cx="118" cy="106" rx="15" ry="17" fill="#fff"/><circle cx="121" cy="108" r="10" fill="#3a2a1a"/><circle cx="124" cy="104" r="3.4" fill="#fff"/><circle cx="118" cy="112" r="1.8" fill="#fff" opacity=".8"/>
+  <path d="M104 94 C110 88 124 86 132 92" stroke="#3a2a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M103 96 l-6 -3 M108 91 l-4 -5" stroke="#3a2a1a" stroke-width="2.5" stroke-linecap="round"/></g>
+  <circle cx="102" cy="128" r="9" fill="#ffb8d8" opacity=".6"/>
+  </svg>`;
+}
+function roomStable(){
+  const FOODS=[
+    ['apple','<svg viewBox="0 0 60 60"><circle cx="30" cy="34" r="19" fill="#6fca3f"/><circle cx="24" cy="30" r="7" fill="#a5e87f" opacity=".8"/><path d="M30 16 C30 10 34 7 38 6" stroke="#8a5a3b" stroke-width="3.5" fill="none"/><path d="M38 12 q8 -6 12 2 q-8 6 -12 -2Z" fill="#4bbf86"/></svg>'],
+    ['carrot','<svg viewBox="0 0 60 60"><path d="M22 22 L44 44 C40 52 30 54 24 48 C18 42 16 30 22 22Z" fill="#ff8a3d"/><path d="M26 30 L34 38 M22 38 L28 44" stroke="#e0702a" stroke-width="2.5"/><path d="M24 20 q-10 -8 -6 -14 q8 0 10 8 q2 -10 10 -8 q2 8 -8 12Z" fill="#4bbf86"/></svg>'],
+    ['hay','<svg viewBox="0 0 60 60"><g stroke="#c99a2e" stroke-width="4" stroke-linecap="round"><path d="M12 46 C20 24 34 16 50 14"/><path d="M10 40 C22 26 32 20 46 18"/><path d="M16 50 C26 34 38 24 52 20"/></g><g stroke="#e8b84a" stroke-width="3.5" stroke-linecap="round"><path d="M14 44 C24 28 36 20 48 16"/><path d="M18 48 C28 32 40 24 50 18"/></g></svg>'],
+    ['banana','<svg viewBox="0 0 60 60"><path d="M14 18 C14 40 32 52 50 46 C52 50 48 54 40 55 C22 56 8 42 10 22 C10 18 13 16 14 18Z" fill="#ffd23f"/><path d="M14 18 C16 34 30 46 48 45" stroke="#e0a800" stroke-width="3" fill="none"/><rect x="11" y="12" width="7" height="8" rx="2" fill="#8a5a3b"/></svg>'],
+    ['corn',`<svg viewBox="0 0 60 60"><path d="M26 8 C38 8 44 22 42 38 C40 50 34 56 30 56 C26 56 20 50 18 38 C16 22 20 8 26 8Z" fill="#ffd23f"/><g fill="#e8b84a">${[0,1,2,3,4].map(r=>[0,1,2].map(c=>`<circle cx="${24+c*7}" cy="${16+r*8}" r="2.6"/>`).join('')).join('')}</g><path d="M18 34 q-10 10 -6 18 q10 -2 12 -12 M42 34 q10 10 6 18 q-10 -2 -12 -12" fill="#4bbf86"/></svg>`]
+  ];
+  const r=el(`<div class="room">
+    <div class="scene"><div class="sceneBg">${SCENE.stable()}</div>
+      <div style="position:absolute;left:0;right:0;bottom:0;height:22%;background:repeating-linear-gradient(100deg,#f0cf7e 0 22px,#e8c46a 22px 34px),linear-gradient(#f0cf7e,#d9ae55);border-top:6px solid #c79544;">
+        <svg viewBox="0 0 64 66" style="position:absolute;left:3%;bottom:14%;width:74px;height:76px;"><path d="M0 12 L64 12 L56 56 L8 56Z" fill="#d9534f" stroke="#b23c38" stroke-width="4"/><ellipse cx="32" cy="12" rx="32" ry="8" fill="#8a3532"/><ellipse cx="32" cy="10" rx="24" ry="5" fill="#4aa3e0"/></svg>
+        <svg viewBox="0 0 92 66" style="position:absolute;right:3%;bottom:16%;width:100px;height:72px;"><rect y="8" width="92" height="58" rx="10" fill="#e8c46a" stroke="#c79544" stroke-width="4"/><g stroke="#c79544" stroke-width="3"><line x1="10" y1="22" x2="82" y2="22"/><line x1="10" y1="37" x2="82" y2="37"/><line x1="10" y1="52" x2="82" y2="52"/></g><path d="M18 8 q14 -14 26 0 q-14 8 -26 0Z" fill="#d9ae55"/></svg>
+      </div>
+      <div class="roomname">Pony Stable</div>
+      <div class="stagecanvas" id="ponyCanvas" style="align-items:flex-end;padding-bottom:5%;"></div>
+      <div id="craveBub" style="position:absolute;left:8%;top:13%;width:104px;">
+        <div style="background:#fff;border:4px solid #b06ae0;border-radius:50%;width:92px;height:92px;display:grid;place-items:center;box-shadow:0 6px 14px var(--shadow);"><span id="craveIcon" style="width:60px;height:60px;display:block;"></span></div>
+        <div style="width:14px;height:14px;background:#fff;border:3px solid #b06ae0;border-radius:50%;margin:4px 0 0 78px;"></div>
+        <div style="width:9px;height:9px;background:#fff;border:3px solid #b06ae0;border-radius:50%;margin:2px 0 0 92px;"></div></div></div>
+    <div class="tray">
+      <div style="text-align:center;font-weight:800;color:var(--pink-deep);">What does the pony want? Feed her!</div>
+      <div id="foodRow"></div>
+      <div class="btnrow"><button class="bigbtn alt" id="brushBtn">🪮 Brush her coat</button></div></div></div>`);
+  const canvas=r.querySelector('#ponyCanvas');
+  canvas.innerHTML=`<div class="idle">${renderPony()}</div>`;
+  let crave=FOODS[Math.floor(Math.random()*FOODS.length)];
+  const craveIcon=r.querySelector('#craveIcon');
+  function paintCrave(){ craveIcon.innerHTML=crave[1]; }
+  paintCrave();
+  function ponyMouth(){ const rc=canvas.getBoundingClientRect(); return {x:rc.left+rc.width*0.34,y:rc.top+rc.height*0.42}; }
+  const wrap=el('<div class="swatches" style="justify-content:center;"></div>');
+  FOODS.forEach(f=>{ const s=el(`<div class="sw big" style="height:74px;">${f[1]}</div>`);
+    s.addEventListener('click',e=>{
+      const m=ponyMouth(); S.pop();
+      spriteAt(e.clientX,e.clientY,f[1],'pop',40);
+      tone(196,.09,'sine',.18); setTimeout(()=>tone(174,.09,'sine',.18),120); setTimeout(()=>tone(196,.09,'sine',.16),240);
+      const pony=canvas.firstElementChild; if(pony){ pony.style.animation='wiggle .5s ease 1'; setTimeout(()=>{ if(pony.isConnected) pony.style.animation=''; },550); }
+      if(f[0]===crave[0]){
+        say('Yummy! That is just what I wanted!'); S.happy(); hearts(m.x,m.y,5); confetti(20);
+        crave=FOODS[Math.floor(Math.random()*FOODS.length)]; paintCrave();
+        const bub=r.querySelector('#craveBub'); if(bub){ bub.style.animation='wiggle .5s ease 1'; setTimeout(()=>{ if(bub.isConnected) bub.style.animation=''; },550); }
+      } else { say('Munch munch! Thank you!'); hearts(m.x,m.y,2); }
+    }); wrap.appendChild(s); });
+  r.querySelector('#foodRow').appendChild(wrap);
+  r.querySelector('#brushBtn').addEventListener('click',()=>{
+    const m=ponyMouth(); S.sparkle(); say('So shiny!');
+    tone(523,.1,'sine',.12); setTimeout(()=>tone(659,.12,'sine',.12),130); setTimeout(()=>tone(784,.14,'sine',.12),270);
+    sparkles(m.x+40,m.y-10,8);
   });
   return r;
 }
@@ -1546,6 +1641,7 @@ const ROOMS=[
   {id:'kitchen',icon:NAVICON.kitchen,label:'Bake',  build:roomKitchen},
   {id:'pet',    icon:NAVICON.pet,    label:'Pet',   build:roomPet},
   {id:'clinic', icon:NAVICON.clinic, label:'Clinic',build:roomClinic},
+  {id:'stable', icon:NAVICON.stable, label:'Pony',  build:roomStable},
   {id:'bedroom',icon:NAVICON.bedroom,label:'Bed',   build:roomBedroom},
   {id:'bath',   icon:NAVICON.bath,   label:'Bath',  build:roomBath},
   {id:'garden', icon:NAVICON.garden, label:'Garden',build:roomGarden},
@@ -1652,7 +1748,7 @@ else { nameInput.focus(); }
 window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
 </script>
 <script>
-/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.3) */
+/* PWA: service worker + the Offline-Ready safety badge (version dreamhouse-v4.4) */
 (function(){
   function badge(){ return document.getElementById('offlineBadge'); }
   window.showOfflineReady=function(txt){ var b=badge(); if(!b)return; b.textContent=txt;
@@ -1670,9 +1766,9 @@ window.addEventListener('resize',()=>{ if(current)openRoom(current,true); });
       var checkReady = async function(){
         try {
           await navigator.serviceWorker.ready;                 // resolves only once a SW is ACTIVE
-          var c = await caches.open('dreamhouse-v4.3');
+          var c = await caches.open('dreamhouse-v4.4');
           var hits = await Promise.all(need.map(function(u){ return c.match(u, { ignoreSearch:true }); }));
-          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.3'); return true; }
+          if (hits.every(Boolean)) { window.showOfflineReady('Offline Ready ✓ v4.4'); return true; }
         } catch (e) { console.warn('offline-check', e); }
         return false;
       };
